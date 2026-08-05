@@ -1,0 +1,2334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HyperProc</title>
+<style>@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+:root{
+  --paper:#F6F3EA;--paper-dim:#EFEBDD;--ink:#1E2A20;--ink-soft:#445048;--muted:#6b756c;
+  --forest:#1F3327;--forest-2:#28412F;--leaf:#3F7D2C;--leaf-bright:#5B9A3C;
+  --soil:#B07D3F;--water:#3E7CA6;--line:#DCD6C3;--card:#FFFFFF;
+  --good:#3f7d2c;--ok:#c98a2b;--bad:#c25b3f;--na:#999;
+  --shadow:0 1px 2px rgba(30,42,32,.06),0 6px 16px rgba(30,42,32,.06);--radius:6px;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{background:var(--paper);color:var(--ink);font-family:'Inter',sans-serif;font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased;}
+
+/* ── Header ── */
+header.site{background:linear-gradient(180deg,var(--forest),var(--forest-2));color:#EFEFE6;padding:34px 28px 0;position:relative;}
+.header-inner{max-width:1200px;margin:0 auto;}
+header.site h1{font-family:'Fraunces',serif;font-weight:600;font-size:clamp(26px,3.5vw,38px);margin:0 0 6px;letter-spacing:-.01em;}
+header.site .tagline{max-width:640px;color:#CFE0CE;font-size:15px;margin:0 0 22px;}
+.spectrum-band{height:10px;width:100%;background:linear-gradient(90deg,#6f3fa6 0%,#3e54c9 8%,#3e8bc9 16%,#3eb6a6 26%,#4fae4a 38%,#8fae3e 48%,#c9b23e 56%,#c9823e 64%,#b23e3e 72%,#6b2a2a 80%,#5c4a45 88%,#8a8a82 100%);border-radius:3px 3px 0 0;}
+.spectrum-band-labels{display:flex;justify-content:space-between;font-size:11px;color:#9FB39C;padding:4px 2px 18px;font-family:'IBM Plex Mono',monospace;}
+
+/* ── Main-level tab nav ── */
+.main-tabs{background:var(--forest-2);border-bottom:1px solid rgba(255,255,255,.08);}
+.main-tabs-inner{max-width:1200px;margin:0 auto;padding:0 24px;display:flex;gap:4px;}
+.main-tab-btn{background:none;border:none;color:#B9CBB6;padding:12px 18px;font-size:14px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;border-bottom:2px solid transparent;}
+.main-tab-btn:hover{color:#EFEFE6;}
+.main-tab-btn.active{color:#fff;border-bottom-color:var(--leaf-bright);}
+.main-tab-panel{display:none;}
+.main-tab-panel.active{display:block;}
+#maintab-methods .card{max-width:860px;margin:0 auto;}
+
+/* ── Layout ── */
+main{max-width:1200px;margin:0 auto;padding:24px 24px 80px;}
+.layout{display:grid;grid-template-columns:1.1fr 1fr;gap:22px;align-items:start;}
+@media(max-width:940px){.layout{grid-template-columns:1fr;}}
+
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px 20px 22px;margin-bottom:18px;}
+.card h2{font-family:'Fraunces',serif;font-weight:600;font-size:18px;margin:0 0 4px;display:flex;align-items:center;gap:8px;}
+.card .step-num{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:var(--leaf);color:#fff;font-size:12px;font-family:'IBM Plex Mono',monospace;flex-shrink:0;}
+.card .card-sub{color:var(--muted);font-size:13.5px;margin:0 0 14px;}
+.card-sub-tight{color:var(--muted);font-size:13px;margin:0 0 10px;}
+
+/* ── Tabs ── */
+.tabs{display:flex;gap:6px;margin-bottom:14px;border-bottom:1px solid var(--line);}
+.tab-btn{background:none;border:none;padding:9px 4px;margin-right:14px;font-size:14px;color:var(--muted);cursor:pointer;font-weight:500;border-bottom:2px solid transparent;}
+.tab-btn.active{color:var(--ink);border-bottom-color:var(--leaf);}
+.tab-panel{display:none;}.tab-panel.active{display:block;}
+
+textarea#pasteArea{width:100%;min-height:100px;resize:vertical;font-family:'IBM Plex Mono',monospace;font-size:12.5px;border:1px solid var(--line);border-radius:4px;padding:10px;background:var(--paper-dim);color:var(--ink);}
+.hint{font-size:12.5px;color:var(--muted);margin-top:6px;}
+
+.btn{display:inline-flex;align-items:center;gap:6px;background:var(--leaf);color:#fff;border:none;border-radius:4px;padding:8px 14px;font-size:14px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;}
+.btn:hover{background:var(--leaf-bright);}.btn.secondary{background:transparent;color:var(--leaf);border:1px solid var(--leaf);}.btn.secondary:hover{background:#EFF6EC;}
+.btn:disabled{opacity:.4;cursor:not-allowed;}
+.btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;}
+
+input[type=file]{font-size:13px;}
+input[type=number]{width:84px;border:1px solid var(--line);border-radius:4px;padding:5px 7px;font-family:'IBM Plex Mono',monospace;font-size:13px;background:#fff;}
+select{border:1px solid var(--line);border-radius:4px;padding:6px 8px;font-family:'Inter',sans-serif;font-size:13.5px;background:#fff;}
+
+.field-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px 16px;margin-bottom:6px;}
+.field{display:flex;flex-direction:column;gap:5px;}
+.field label{font-size:12.5px;color:var(--ink-soft);font-weight:600;}
+.field .sub{font-size:11.5px;color:var(--muted);font-weight:400;}
+.checkbox-row{display:flex;align-items:center;gap:8px;font-size:13.5px;margin:8px 0 4px;}
+
+#demoNote{display:none;background:#EFF6EC;border:1px solid #CFE3C8;border-radius:4px;padding:9px 12px;font-size:13px;color:#2c5023;margin-bottom:12px;}
+
+/* ── Advanced panel ── */
+.advanced-toggle{background:none;border:none;cursor:pointer;color:var(--leaf);font-weight:600;font-size:13.5px;padding:4px 0;display:flex;align-items:center;gap:6px;}
+.advanced-toggle .chev{transition:transform .15s;display:inline-block;}
+.advanced-toggle[aria-expanded="true"] .chev{transform:rotate(90deg);}
+.advanced-panel{max-height:0;overflow:hidden;transition:max-height .2s ease;}
+.advanced-panel.open{max-height:2400px;}
+.advanced-inner{padding-top:14px;}
+
+table.range-table{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px;}
+table.range-table th{text-align:left;color:var(--muted);font-weight:600;font-size:12px;padding:4px 6px;border-bottom:1px solid var(--line);}
+table.range-table td{padding:4px 6px;border-bottom:1px solid #EEE9DA;}
+.muted{color:var(--muted);font-size:12px;}
+
+/* ── Pre-processing card ── */
+.pp-status{font-size:13px;padding:8px 10px;border-radius:4px;margin-top:10px;display:none;}
+.pp-status.active{display:block;background:#EFF6EC;border:1px solid #CFE3C8;color:var(--forest);}
+.pp-controls{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:12px 0;}
+@media(max-width:580px){.pp-controls{grid-template-columns:1fr;}}
+.pp-block{border:1px solid var(--line);border-radius:4px;padding:12px;}
+.pp-block-title{font-weight:600;font-size:13.5px;display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.pp-params{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;}
+.pp-params label{font-size:12px;color:var(--ink-soft);}
+.pp-params select{width:100%;font-size:12.5px;}
+.pp-block input[type=checkbox]{width:16px;height:16px;}
+
+/* ── Progress ── */
+#progressWrap{display:none;margin-top:14px;}
+.progress-track{height:8px;background:var(--paper-dim);border-radius:4px;overflow:hidden;border:1px solid var(--line);}
+.progress-bar{height:100%;background:var(--leaf);width:0%;transition:width .15s;}
+#progressText{font-size:12.5px;color:var(--muted);margin-top:6px;font-family:'IBM Plex Mono',monospace;}
+
+.warning{background:#FBF1E0;border:1px solid #EAD2A0;color:#7A5419;border-radius:4px;padding:8px 10px;font-size:13px;margin-bottom:8px;}
+
+/* ── Charts ── */
+.spectrum-chart{display:block;width:100%;}
+.spectrum-chart .grid-line{stroke:#EAE5D6;stroke-width:1;}
+.spectrum-chart .axis-label{font-size:9.5px;fill:var(--muted);font-family:'IBM Plex Mono',monospace;}
+.spectrum-chart .axis-title{font-size:11px;fill:var(--ink-soft);font-family:'Inter',sans-serif;}
+.chart-legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:6px;font-size:12.5px;color:var(--ink-soft);}
+.legend-item i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px;}
+#previewWrap{display:none;margin-top:12px;}
+
+/* ── Vegetation indices ── */
+#viWrap{display:none;}
+.vi-toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;}
+.vi-source-tag{font-size:12.5px;color:var(--muted);background:var(--paper-dim);padding:3px 9px;border-radius:12px;border:1px solid var(--line);}
+.vi-group{margin-bottom:16px;}
+.vi-group-hdr{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;border-bottom-width:2px;border-bottom-style:solid;padding-bottom:5px;margin-bottom:8px;}
+.vi-cards-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(138px,1fr));gap:8px;}
+.vi-card{background:var(--paper-dim);border:1px solid var(--line);border-radius:5px;padding:9px 10px;cursor:default;transition:box-shadow .12s;}
+.vi-card:hover{box-shadow:0 2px 8px rgba(30,42,32,.12);}
+.vi-card-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px;}
+.vi-card-name{font-weight:700;font-size:13.5px;color:var(--ink);font-family:'IBM Plex Mono',monospace;}
+.vi-card-val{font-size:14px;font-weight:600;color:var(--forest);font-family:'IBM Plex Mono',monospace;}
+.vi-unit{font-size:10px;color:var(--muted);}
+.vi-gauge{height:5px;background:#ddd;border-radius:3px;position:relative;margin-bottom:5px;overflow:visible;}
+.vi-gauge-fill{height:100%;background:var(--vc,#3f7d2c);border-radius:3px;opacity:.6;}
+.vi-gauge-pin{position:absolute;top:-3px;width:3px;height:11px;background:var(--vc,#3f7d2c);border-radius:2px;transform:translateX(-1.5px);}
+.vi-badge{font-size:10.5px;padding:2px 7px;border-radius:10px;display:inline-block;margin-bottom:4px;font-weight:500;}
+.vi-badge-good{background:#e2f2dc;color:#2a5420;}
+.vi-badge-ok{background:#fdf0d5;color:#6b4208;}
+.vi-badge-bad{background:#fce8e3;color:#8b2915;}
+.vi-card-full{font-size:10.5px;color:var(--muted);line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.vi-na{opacity:.55;}
+.vi-na-label{display:block;font-size:11px;color:var(--na);margin:3px 0;}
+
+/* ── PROSAIL results ── */
+#resultsWrap{display:none;}
+.stat-row{display:flex;gap:20px;flex-wrap:wrap;margin:12px 0 16px;}
+.stat .stat-label{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;}
+.stat .stat-value{font-family:'IBM Plex Mono',monospace;font-size:16px;color:var(--forest);font-weight:500;}
+.gauges-grid{display:grid;grid-template-columns:1fr;gap:14px;margin-top:6px;}
+.gauge .gauge-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;}
+.gauge-label{font-size:13px;color:var(--ink-soft);}
+.gauge-short{color:var(--muted);}
+.gauge-value{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:14px;color:var(--ink);}
+.gauge-unit{font-weight:400;color:var(--muted);font-size:11.5px;}
+.gauge-track{position:relative;height:8px;border-radius:4px;background:var(--paper-dim);border:1px solid var(--line);}
+.gauge-spread{position:absolute;top:0;bottom:0;background:var(--c);opacity:.32;border-radius:4px;}
+.gauge-marker{position:absolute;top:-3px;width:3px;height:14px;background:var(--c);border-radius:2px;transform:translateX(-1.5px);}
+.gauge-true{position:absolute;top:-7px;width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:8px solid #555;transform:translateX(-5px);}
+.gauge-range{display:flex;justify-content:space-between;font-size:10.5px;color:var(--muted);margin-top:3px;font-family:'IBM Plex Mono',monospace;}
+
+/* ── Batch ── */
+#batchSection{display:none;}
+table.batch-table{width:100%;border-collapse:collapse;font-size:12px;}
+table.batch-table th{text-align:left;color:var(--muted);font-weight:600;padding:5px 6px;border-bottom:1px solid var(--line);position:sticky;top:0;background:#fff;}
+table.batch-table td{padding:5px 6px;border-bottom:1px solid #EEE9DA;font-family:'IBM Plex Mono',monospace;}
+table.batch-table tr{cursor:pointer;}table.batch-table tr:hover{background:#F7F9F4;}table.batch-table tr.active-row{background:#EAF3E6;}
+.table-scroll{max-height:360px;overflow:auto;border:1px solid var(--line);border-radius:4px;}
+.no-data-msg{color:var(--muted);font-size:13.5px;text-align:center;padding:28px 10px;border:1px dashed var(--line);border-radius:6px;}
+
+/* ── Methodology ── */
+.methodology{font-size:13.5px;color:var(--ink-soft);}
+.methodology h3{font-family:'Fraunces',serif;font-size:15px;margin:16px 0 5px;color:var(--ink);}
+.methodology h3:first-child{margin-top:0;}
+.methodology ul{margin:5px 0 0;padding-left:20px;}
+.methodology code{background:var(--paper-dim);padding:1px 5px;border-radius:3px;font-size:12px;}
+
+footer{text-align:center;color:var(--muted);font-size:12.5px;padding:24px 20px 40px;}
+.sticky-col{position:sticky;top:18px;}
+
+/* ── Dividers ── */
+.section-div{border:none;border-top:1px solid var(--line);margin:16px 0;}
+.section-label{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+
+<header class="site">
+  <div class="header-inner">
+    <h1>HyperProc</h1>
+    <p class="tagline">Developed by UCD Advanced Irrigation Lab</p>
+    <div class="spectrum-band"></div>
+    <div class="spectrum-band-labels"><span>400 nm</span><span>VIS</span><span>700 nm</span><span>NIR</span><span>1300 nm</span><span>SWIR</span><span>2500 nm</span></div>
+  </div>
+</header>
+
+<nav class="main-tabs">
+  <div class="main-tabs-inner">
+    <button class="main-tab-btn active" data-maintab="tool">Tool</button>
+    <button class="main-tab-btn" data-maintab="methods">Methods &amp; References</button>
+  </div>
+</nav>
+
+<main>
+<div class="main-tab-panel active" id="maintab-tool">
+<div class="layout">
+
+<!-- ═══════ LEFT COLUMN ═══════ -->
+<div>
+
+  <!-- Step 1: Load spectrum -->
+  <div class="card">
+    <h2><span class="step-num">1</span>Load a reflectance spectrum</h2>
+
+    <div id="demoNote">
+      <b>Example loaded.</b> Synthetic PROSAIL spectrum with ~1% noise. Grey triangles on the PROSAIL result gauges mark the true values used to generate it.
+    </div>
+
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="paste">Paste data</button>
+      <button class="tab-btn" data-tab="upload">Upload file</button>
+      <button class="tab-btn" data-tab="example">Try example</button>
+    </div>
+
+    <div class="tab-panel active" id="tab-paste">
+      <textarea id="pasteArea" placeholder="400  0.041&#10;405  0.043&#10;410  0.045&#10;...&#10;(wavelength nm, reflectance; space/tab/comma. Multiple reflectance columns = batch mode.)"></textarea>
+      <div class="btn-row"><button class="btn" id="parseBtn">Load pasted spectrum</button></div>
+      <p class="hint">Accepts 0–1 fraction or 0–100%; percentages are detected and converted automatically. Multiple columns load as Sample 1, Sample 2, etc.</p>
+    </div>
+
+    <div class="tab-panel" id="tab-upload">
+      <input type="file" id="fileInput" accept=".csv,.txt,.tsv">
+      <p class="hint">CSV/TSV/TXT — wavelength in first column, reflectance in subsequent columns, optional header row (skipped). Samples are numbered Sample 1, Sample 2, etc.</p>
+    </div>
+
+    <div class="tab-panel" id="tab-example">
+      <p class="hint">Load a synthetic example spectrum with hidden true parameters to test retrieval.</p>
+      <button class="btn secondary" id="exampleBtn">Load example spectrum</button>
+    </div>
+
+    <div id="previewWrap"><div id="previewChart"></div></div>
+    <p class="no-data-msg" id="noDataMsg">No spectrum loaded yet.</p>
+  </div>
+
+  <!-- Step 2: Pre-process -->
+  <div class="card" id="ppCard" style="display:none;">
+    <h2><span class="step-num">2</span>Pre-process spectrum</h2>
+
+    <div class="pp-controls">
+      <div class="pp-block">
+        <div class="pp-block-title">
+          <input type="checkbox" id="ppSpike">
+          <label for="ppSpike">Spike removal (MAD-based)</label>
+        </div>
+        <p class="hint" style="margin-top:0;margin-bottom:8px;">Detects and linearly interpolates over isolated outlier points, common in grating-junction artefacts.</p>
+        <div class="pp-params">
+          <label for="ppMad">Threshold (× local MAD)</label>
+          <select id="ppMad">
+            <option value="2">2 — aggressive</option>
+            <option value="3" selected>3 — recommended</option>
+            <option value="4">4 — conservative</option>
+            <option value="6">6 — very conservative</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="pp-block">
+        <div class="pp-block-title">
+          <input type="checkbox" id="ppSG">
+          <label for="ppSG">Savitzky-Golay smoothing</label>
+        </div>
+        <p class="hint" style="margin-top:0;margin-bottom:8px;">Polynomial least-squares filter: preserves spectral features while reducing random noise. Standard for field spectroscopy.</p>
+        <div class="pp-params">
+          <label for="ppWindow">Window size</label>
+          <select id="ppWindow">
+            <option value="2">5 pt (25 nm) — light</option>
+            <option value="3" selected>7 pt (35 nm) — moderate</option>
+            <option value="5">11 pt (55 nm) — strong</option>
+            <option value="7">15 pt (75 nm) — heavy</option>
+            <option value="10">21 pt (105 nm) — max</option>
+          </select>
+          <label for="ppOrder">Poly. order</label>
+          <select id="ppOrder">
+            <option value="2" selected>2 — quadratic</option>
+            <option value="3">3 — cubic</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn" id="ppApplyBtn">Apply pre-processing</button>
+      <button class="btn secondary" id="ppResetBtn">Reset to raw</button>
+    </div>
+    <div class="pp-status" id="ppStatus"></div>
+  </div>
+
+  <!-- Step 3: Geometry & PROSAIL retrieval -->
+  <div class="card">
+    <h2><span class="step-num">3</span>Acquisition geometry &amp; retrieval settings</h2>
+
+    <button class="advanced-toggle" id="solarToggle" aria-expanded="false">
+      <span class="chev">▶</span> 🧭 Solar position calculator — estimate tts/psi from location &amp; flight time
+    </button>
+    <div class="advanced-panel" id="solarPanel">
+      <div class="advanced-inner">
+        <div class="field-grid">
+          <div class="field" style="grid-column:1/3;">
+            <label>Search city / place name</label>
+            <div style="display:flex;gap:8px;">
+              <input type="text" id="solarCityInput" placeholder="e.g. Davis, CA or Firenze, Italy" style="flex:1;border:1px solid var(--line);border-radius:4px;padding:6px 8px;font-size:13.5px;">
+              <button class="btn secondary" id="solarGeocodeBtn" style="padding:6px 12px;white-space:nowrap;">Find</button>
+            </div>
+          </div>
+        </div>
+        <p class="hint" id="solarGeocodeStatus" style="margin-top:4px;"></p>
+
+        <div class="field-grid" style="margin-top:8px;">
+          <div class="field"><label>Latitude<span class="sub"> °N</span></label><input type="number" id="solarLat" step="0.0001" placeholder="e.g. 38.5449"></div>
+          <div class="field"><label>Longitude<span class="sub"> °E</span></label><input type="number" id="solarLon" step="0.0001" placeholder="e.g. -121.7405"></div>
+          <div class="field"><label>UTC offset<span class="sub"> hrs</span></label>
+            <div style="display:flex;gap:6px;">
+              <input type="number" id="solarUTC" step="0.5" value="-8" style="flex:1;">
+              <button class="btn secondary" id="solarEstUTCBtn" title="Estimate from longitude" style="padding:5px 9px;font-size:12px;white-space:nowrap;">≈ est.</button>
+            </div>
+          </div>
+        </div>
+        <p class="hint">UTC offset = local clock minus UTC (e.g. PST −8, PDT −7, CET +1, CEST +2). City search and "≈ est." give a longitude-based starting guess — always verify against the actual time zone and daylight saving for your flight date.</p>
+
+        <div class="field-grid">
+          <div class="field"><label>Date</label><input type="date" id="solarDate"></div>
+          <div class="field"><label>Local time<span class="sub"> 24h</span></label><input type="time" id="solarTime" value="12:00"></div>
+        </div>
+
+        <div class="checkbox-row">
+          <input type="checkbox" id="solarHasSensorAz">
+          <label for="solarHasSensorAz">My sensor/flight heading is off-nadir — compute relative azimuth (psi) too</label>
+        </div>
+        <div class="field-grid" id="solarSensorAzWrap" style="display:none;">
+          <div class="field"><label>Sensor/view azimuth<span class="sub"> ° from N, cw</span></label><input type="number" id="solarSensorAz" step="1" min="0" max="360" placeholder="e.g. 90 (looking East)"></div>
+        </div>
+
+        <div class="btn-row"><button class="btn" id="solarCalcBtn">Calculate solar position</button></div>
+
+        <div id="solarResults" style="display:none;margin-top:12px;">
+          <div class="stat-row">
+            <div class="stat"><div class="stat-label">Solar elevation</div><div class="stat-value" id="solarElevStat">–</div></div>
+            <div class="stat"><div class="stat-label">Solar zenith (tts)</div><div class="stat-value" id="solarZenithStat">–</div></div>
+            <div class="stat"><div class="stat-label">Solar azimuth</div><div class="stat-value" id="solarAzStat">–</div></div>
+          </div>
+          <div class="stat" id="solarPsiRow" style="display:none;margin-bottom:10px;"><div class="stat-label">Relative azimuth (psi)</div><div class="stat-value" id="solarPsiStat">–</div></div>
+          <div id="solarWarning"></div>
+          <div class="btn-row">
+            <button class="btn secondary" id="solarUseTtsBtn" style="padding:6px 12px;font-size:13px;">Use as tts →</button>
+            <button class="btn secondary" id="solarUsePsiBtn" style="padding:6px 12px;font-size:13px;display:none;">Use as psi →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="field-grid" style="margin-top:16px;">
+      <div class="field"><label>Solar zenith (tts)<span class="sub"> °</span></label><input type="number" id="tts" value="25" min="0" max="89"></div>
+      <div class="field"><label>View zenith (tto)<span class="sub"> °</span></label><input type="number" id="tto" value="0" min="0" max="89"></div>
+      <div class="field"><label>Rel. azimuth (psi)<span class="sub"> °</span></label><input type="number" id="psi" value="0" min="0" max="360"></div>
+      <div class="field"><label>LUT size</label>
+        <select id="lutSize">
+          <option value="2000">2,000 — fastest</option>
+          <option value="5000">5,000 — fast</option>
+          <option value="10000" selected>10,000 — balanced</option>
+          <option value="20000">20,000 — thorough</option>
+          <option value="40000">40,000 — maximum</option>
+        </select>
+      </div>
+    </div>
+
+    <button class="advanced-toggle" id="advancedToggle" aria-expanded="false">
+      <span class="chev">▶</span> Advanced: parameter ranges, hotspot, wavelength filtering
+    </button>
+    <div class="advanced-panel" id="advancedPanel">
+      <div class="advanced-inner">
+        <div class="field-grid">
+          <div class="field"><label>Hotspot size</label><input type="number" id="hspot" value="0.01" step="0.005" min="0"></div>
+          <div class="field"><label>RMSE threshold ×</label><input type="number" id="thresholdMult" value="1.2" step="0.05" min="1.0"></div>
+          <div class="field"><label>Use WL from</label><input type="number" id="minWL" value="400" step="10"></div>
+          <div class="field"><label>to</label><input type="number" id="maxWL" value="2500" step="10"></div>
+        </div>
+        <div class="checkbox-row">
+          <input type="checkbox" id="excludeAtm" checked>
+          <label for="excludeAtm">Exclude atmospheric water-vapour bands (1350–1450, 1800–1950 nm)</label>
+        </div>
+        <div id="rangeTable"></div>
+        <div class="btn-row"><button class="btn secondary" id="resetRangesBtn">Reset to literature defaults</button></div>
+      </div>
+    </div>
+
+    <div class="btn-row" style="margin-top:16px;">
+      <button class="btn" id="runBtn" disabled>Extract PROSAIL parameters</button>
+    </div>
+    <div id="progressWrap">
+      <div class="progress-track"><div class="progress-bar" id="progressBar"></div></div>
+      <div id="progressText"></div>
+    </div>
+    <div id="warningsBox" style="margin-top:10px;"></div>
+  </div>
+
+</div><!-- end left -->
+
+<!-- ═══════ RIGHT COLUMN ═══════ -->
+<div class="sticky-col">
+
+  <!-- Vegetation indices panel (auto-shown on spectrum load) -->
+  <div class="card" id="viWrap">
+    <h2>Vegetation indices</h2>
+    <div class="vi-toolbar">
+      <span class="vi-source-tag" id="viSourceTag">📊 Raw observed spectrum</span>
+      <div class="btn-row" style="margin:0;">
+        <select id="sampleSelect" style="min-width:120px;"></select>
+        <button class="btn secondary" id="viDownloadBtn" style="padding:5px 10px;font-size:13px;">⬇ CSV</button>
+      </div>
+    </div>
+    <div id="viGrid"></div>
+  </div>
+
+  <!-- PROSAIL results panel -->
+  <div class="card" id="resultsWrap">
+    <h2>PROSAIL retrieved traits</h2>
+    <div class="stat-row">
+      <div class="stat"><div class="stat-label">Min. RMSE</div><div class="stat-value" id="rmseStat">–</div></div>
+      <div class="stat"><div class="stat-label">LUT matches</div><div class="stat-value" id="matchStat">–</div></div>
+    </div>
+    <div class="stat" style="margin-bottom:12px;"><div class="stat-label">Quick spectral indices</div><div class="stat-value" id="indicesStat" style="font-size:13px;line-height:1.5;">–</div></div>
+    <p class="hint" style="margin:0 0 10px;">Bars show retrieved value (marker) ± 1 SD (shaded). ▼ triangles = known true values (example only).</p>
+    <div class="gauges-grid" id="gaugesGrid"></div>
+    <hr class="section-div">
+    <div class="section-label">Spectral fit</div>
+    <div id="fitChart"></div>
+  </div>
+
+  <!-- Batch results panel -->
+  <div class="card" id="batchSection">
+    <h2 style="font-size:16px;">Batch results</h2>
+    <div class="table-scroll"><div id="batchTable"></div></div>
+    <div class="btn-row"><button class="btn secondary" id="downloadCsvBtn">⬇ Download PROSAIL CSV</button></div>
+  </div>
+
+  <!-- Export everything -->
+  <div class="card" id="exportCard" style="display:none;">
+    <h2 style="font-size:16px;">Export all data</h2>
+    <div class="btn-row"><button class="btn" id="exportExcelBtn">⬇ Export all data (.xlsx)</button></div>
+  </div>
+
+</div><!-- end right -->
+
+</div><!-- end layout -->
+</div><!-- end maintab-tool -->
+
+<div class="main-tab-panel" id="maintab-methods">
+  <div class="card methodology">
+    <h2 style="margin-bottom:10px;">Methods &amp; references</h2>
+    <h3>Pre-processing</h3>
+    <p><b>Spike removal</b> uses a locally adaptive MAD (Median Absolute Deviation) test to flag points that deviate from their neighbourhood by more than a configurable multiple of the local MAD (Hampel 1974). Detected spikes are replaced by linear interpolation from the nearest clean neighbours. <b>Savitzky-Golay smoothing</b> fits a local polynomial (order 2 or 3) in a sliding window by least-squares (Savitzky &amp; Golay, 1964; Rinnan et al. 2009), preserving peak positions and shapes while reducing random noise — the standard filter for reflectance spectroscopy.</p>
+    <h3>Vegetation indices</h3>
+    <p>29 indices across six functional groups: greenness/biomass (NDVI, EVI, SAVI, MSAVI2, GNDVI), chlorophyll &amp; N-status (CIre, CIg, MTCI, NDRE, TCARI, MCARI), red-edge dynamics (REP, RVSI, mND705), stress &amp; carotenoids (PRI, SIPI, PSRI, ARI1, ARI2), canopy water content (WI, NDWI, MSI, NDII), and nitrogen/dry matter (CCCI, DD, RDVI — VIS-NIR only, 400–900 nm; NDNI, NDLI, CAI — require SWIR). Indices report N/A if required wavelengths fall outside the loaded spectral range, so multispectral sensors limited to 400–900 nm still get usable N and biomass proxies via CCCI, DD and RDVI.</p>
+    <h3>PROSAIL forward model</h3>
+    <p><b>PROSPECT-5</b> (Jacquemoud &amp; Baret 1990; Féret et al. 2008) computes leaf optical properties from Cab, Car, Cbrown, Cw, Cm and leaf layer count N. <b>4SAIL</b> (Verhoef 1984; Verhoef et al. 2007) folds these into a canopy bidirectional reflectance factor given LAI, leaf angle distribution, hotspot and acquisition geometry. Both are implemented in JavaScript, validated against the reference <code>prosail</code> Python package to &lt;10<sup>−8</sup> reflectance units.</p>
+    <h3>LUT inversion</h3>
+    <p>Monte-Carlo sampling generates a large random parameter ensemble; each entry is simulated with PROSAIL. The observed spectrum is matched against this LUT by RMSE over available wavelengths. All entries within 1.2× the minimum RMSE are averaged to give the retrieved parameter and its spread. A k-NN fallback (25 nearest) is used when the threshold yields too few matches. Default parameter ranges (editable under Advanced) come from literature surveys of crop canopies (Wang et al. 2022; Zhou et al. 2017; Duan et al. 2014).</p>
+    <h3>Solar position calculator</h3>
+    <p>Solar zenith and azimuth are computed with the NOAA solar position algorithm (Meeus-based), accurate to within a few hundredths of a degree. City search resolves coordinates via OpenStreetMap Nominatim; the UTC offset is then estimated from longitude (15° ≈ 1 hour) as a starting point — always verify it against the actual time zone and daylight saving for your flight date.</p>
+    <h3>Caveats</h3>
+    <ul>
+      <li>LUT inversion suffers <b>equifinality</b>: Cab, Car and N are correlated. LAI, Cbrown and soil terms are generally more reliably retrieved.</li>
+      <li>Narrow parameter ranges using prior knowledge (crop, phenological stage) dramatically improve accuracy.</li>
+      <li>Acquisition geometry must match your measurement; canopy BRF is angle-dependent.</li>
+      <li>This is a research/teaching tool — validate against ground measurements before operational use.</li>
+    </ul>
+  </div>
+</div><!-- end maintab-methods -->
+
+</main>
+
+<footer>HyperProc · PROSPECT-5 (Féret et al. 2008) · 4SAIL (Verhoef et al. 2007) · SG filter (Savitzky &amp; Golay 1964) · 29 vegetation indices · for research and teaching use.</footer>
+
+<script>// Auto-generated PROSPECT-5 + soil spectral library, resampled at 5nm from prosail package data
+const WL = [400,405,410,415,420,425,430,435,440,445,450,455,460,465,470,475,480,485,490,495,500,505,510,515,520,525,530,535,540,545,550,555,560,565,570,575,580,585,590,595,600,605,610,615,620,625,630,635,640,645,650,655,660,665,670,675,680,685,690,695,700,705,710,715,720,725,730,735,740,745,750,755,760,765,770,775,780,785,790,795,800,805,810,815,820,825,830,835,840,845,850,855,860,865,870,875,880,885,890,895,900,905,910,915,920,925,930,935,940,945,950,955,960,965,970,975,980,985,990,995,1000,1005,1010,1015,1020,1025,1030,1035,1040,1045,1050,1055,1060,1065,1070,1075,1080,1085,1090,1095,1100,1105,1110,1115,1120,1125,1130,1135,1140,1145,1150,1155,1160,1165,1170,1175,1180,1185,1190,1195,1200,1205,1210,1215,1220,1225,1230,1235,1240,1245,1250,1255,1260,1265,1270,1275,1280,1285,1290,1295,1300,1305,1310,1315,1320,1325,1330,1335,1340,1345,1350,1355,1360,1365,1370,1375,1380,1385,1390,1395,1400,1405,1410,1415,1420,1425,1430,1435,1440,1445,1450,1455,1460,1465,1470,1475,1480,1485,1490,1495,1500,1505,1510,1515,1520,1525,1530,1535,1540,1545,1550,1555,1560,1565,1570,1575,1580,1585,1590,1595,1600,1605,1610,1615,1620,1625,1630,1635,1640,1645,1650,1655,1660,1665,1670,1675,1680,1685,1690,1695,1700,1705,1710,1715,1720,1725,1730,1735,1740,1745,1750,1755,1760,1765,1770,1775,1780,1785,1790,1795,1800,1805,1810,1815,1820,1825,1830,1835,1840,1845,1850,1855,1860,1865,1870,1875,1880,1885,1890,1895,1900,1905,1910,1915,1920,1925,1930,1935,1940,1945,1950,1955,1960,1965,1970,1975,1980,1985,1990,1995,2000,2005,2010,2015,2020,2025,2030,2035,2040,2045,2050,2055,2060,2065,2070,2075,2080,2085,2090,2095,2100,2105,2110,2115,2120,2125,2130,2135,2140,2145,2150,2155,2160,2165,2170,2175,2180,2185,2190,2195,2200,2205,2210,2215,2220,2225,2230,2235,2240,2245,2250,2255,2260,2265,2270,2275,2280,2285,2290,2295,2300,2305,2310,2315,2320,2325,2330,2335,2340,2345,2350,2355,2360,2365,2370,2375,2380,2385,2390,2395,2400,2405,2410,2415,2420,2425,2430,2435,2440,2445,2450,2455,2460,2465,2470,2475,2480,2485,2490,2495,2500];
+const NR = [1.4955,1.4978,1.5024,1.5076,1.5134,1.5195,1.5235,1.5267,1.5286,1.5295,1.5282,1.5256,1.5224,1.5189,1.5166,1.515,1.5135,1.5103,1.5034,1.4921,1.4776,1.4615,1.4468,1.436,1.4302,1.4286,1.4292,1.4302,1.4308,1.431,1.4303,1.4285,1.4255,1.422,1.4185,1.4156,1.4133,1.4117,1.4105,1.4095,1.4086,1.4078,1.4075,1.4077,1.4082,1.4082,1.4077,1.408,1.4108,1.4166,1.4229,1.4284,1.4383,1.4544,1.4714,1.4857,1.4963,1.4847,1.4445,1.4154,1.4106,1.4168,1.4261,1.4361,1.4462,1.4554,1.4632,1.4694,1.4736,1.4759,1.4766,1.4766,1.4762,1.4754,1.4744,1.4732,1.472,1.471,1.47,1.469,1.4681,1.4672,1.4663,1.4655,1.4648,1.4639,1.4631,1.4625,1.4617,1.461,1.4602,1.4596,1.4589,1.4582,1.4577,1.4569,1.4562,1.4554,1.4547,1.4539,1.4532,1.4525,1.4518,1.4511,1.4503,1.4495,1.4488,1.4479,1.4472,1.4462,1.4457,1.4449,1.4445,1.4436,1.4434,1.4427,1.442,1.4414,1.4415,1.4407,1.4399,1.4392,1.4389,1.4384,1.4376,1.4369,1.4364,1.4363,1.4359,1.4351,1.4348,1.4342,1.4338,1.4333,1.433,1.4324,1.4317,1.4313,1.4305,1.4301,1.4293,1.4288,1.4284,1.4282,1.4275,1.4267,1.4263,1.4257,1.4252,1.4244,1.4234,1.4226,1.4222,1.4219,1.4214,1.4206,1.4205,1.4199,1.4203,1.4187,1.4186,1.4178,1.4173,1.4168,1.4161,1.4153,1.4148,1.4143,1.4133,1.4127,1.4121,1.4116,1.4111,1.4104,1.4103,1.4093,1.4089,1.408,1.4078,1.4073,1.4064,1.4055,1.4057,1.4053,1.4046,1.4045,1.404,1.4034,1.4033,1.4023,1.4008,1.4002,1.4016,1.3992,1.4,1.3999,1.4019,1.3988,1.3958,1.396,1.3938,1.3943,1.3933,1.3931,1.3915,1.388,1.3843,1.3801,1.3765,1.3725,1.37,1.368,1.3657,1.3654,1.365,1.3644,1.3649,1.3633,1.3642,1.364,1.3646,1.3657,1.3665,1.3673,1.3689,1.3695,1.37,1.3717,1.3723,1.3723,1.373,1.3736,1.3734,1.3738,1.3735,1.3732,1.3736,1.3737,1.3738,1.3743,1.3742,1.3743,1.3738,1.373,1.3731,1.3726,1.3726,1.3715,1.3707,1.371,1.3714,1.3708,1.3695,1.3687,1.3683,1.367,1.3659,1.3655,1.3648,1.3647,1.364,1.3631,1.3629,1.3622,1.3616,1.3612,1.3618,1.3616,1.3613,1.3617,1.3626,1.3637,1.363,1.3646,1.363,1.3611,1.3649,1.3601,1.3614,1.3622,1.3619,1.3635,1.3629,1.3634,1.3652,1.3638,1.3631,1.3623,1.3628,1.3597,1.3595,1.3613,1.3643,1.3645,1.3653,1.3668,1.3627,1.3558,1.3511,1.3524,1.3601,1.3611,1.3599,1.3613,1.3591,1.3547,1.3505,1.3465,1.3427,1.3391,1.3357,1.3326,1.3297,1.327,1.3246,1.3225,1.3206,1.319,1.3177,1.3168,1.3161,1.3157,1.3152,1.3148,1.3144,1.3139,1.3134,1.3129,1.3124,1.3119,1.3114,1.3108,1.3103,1.3097,1.3092,1.3086,1.308,1.3074,1.3068,1.3062,1.3057,1.3051,1.3045,1.3039,1.3033,1.3027,1.3021,1.3015,1.3009,1.3003,1.2997,1.2991,1.2985,1.2979,1.2973,1.2966,1.296,1.2955,1.2949,1.2943,1.2937,1.2931,1.2924,1.2918,1.2912,1.2906,1.29,1.2894,1.2888,1.2882,1.2876,1.2871,1.2865,1.286,1.2854,1.2848,1.2843,1.2838,1.2832,1.2827,1.2822,1.2816,1.2811,1.2806,1.2801,1.2797,1.2793,1.2789,1.2786,1.2783,1.2778,1.2774,1.2769,1.2764,1.2759,1.2755,1.2751,1.2747,1.2743,1.274,1.2737,1.2734,1.2731,1.2728,1.2725,1.2723,1.272,1.2718,1.2715,1.2713,1.2712,1.271,1.2709,1.2708,1.2708,1.2708,1.271,1.2714,1.2719,1.2726,1.2736];
+const KAB = [0.02676,0.04606,0.05526,0.06189,0.06475,0.06747,0.06979,0.0716,0.0712,0.06685,0.0609,0.05439,0.0499,0.04767,0.04622,0.04535,0.04413,0.04149,0.03683,0.03094,0.02502,0.01979,0.01536,0.01183,0.00949,0.008437,0.008595,0.009544,0.01083,0.01201,0.01286,0.01353,0.01421,0.01511,0.0165,0.01814,0.0196,0.02079,0.02171,0.02231,0.02279,0.02356,0.02489,0.02654,0.02803,0.02888,0.02921,0.02993,0.03208,0.03552,0.0389,0.04152,0.04588,0.05239,0.05765,0.05914,0.0565,0.04689,0.03254,0.02039,0.01259,0.008099,0.005461,0.003733,0.002528,0.001683,0.001103,0.000711,0.0004539,0.0002909,0.0001924,0.0001243,7.354e-05,3.8e-05,1.539e-05,3.473e-06,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+const KCAR = [0.2895,0.2456,0.2203,0.2002,0.1866,0.1777,0.1715,0.1682,0.1664,0.1632,0.1577,0.1497,0.1425,0.1358,0.1308,0.1285,0.127,0.1234,0.1166,0.1076,0.0966,0.0846,0.07275,0.06122,0.05018,0.03981,0.03026,0.02172,0.01436,0.00833,0.003816,0.0009822,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+const KBROWN = [0.5272,0.5222,0.5172,0.5122,0.5072,0.5022,0.4972,0.4912,0.4852,0.4793,0.4733,0.467,0.4608,0.4556,0.4504,0.4453,0.4401,0.4337,0.4272,0.4208,0.4144,0.41,0.4057,0.4009,0.3962,0.3914,0.3867,0.376,0.3654,0.3582,0.3511,0.3456,0.3401,0.3312,0.3223,0.3121,0.3019,0.292,0.2821,0.2728,0.2636,0.2549,0.2463,0.2382,0.2302,0.2229,0.2156,0.2088,0.202,0.1955,0.189,0.1829,0.1768,0.1704,0.1641,0.1572,0.1504,0.1437,0.137,0.1308,0.1245,0.1189,0.1133,0.1078,0.1024,0.09727,0.09218,0.08729,0.08239,0.07816,0.07393,0.07023,0.06653,0.06318,0.05983,0.05634,0.05284,0.04992,0.04699,0.04437,0.04176,0.03937,0.03698,0.03492,0.03286,0.03102,0.02918,0.02753,0.02589,0.0244,0.0229,0.02159,0.02029,0.01915,0.01802,0.01703,0.01604,0.01516,0.01428,0.01357,0.01286,0.01235,0.01185,0.01135,0.01086,0.01037,0.009884,0.009404,0.008931,0.008464,0.008004,0.007552,0.007107,0.006671,0.006244,0.005827,0.005419,0.005023,0.004637,0.004263,0.003901,0.003552,0.003215,0.002893,0.002585,0.002291,0.002012,0.00175,0.001503,0.001274,0.001061,0.0008665,0.0006901,0.0005326,0.0003944,0.000276,0.000178,0.0001009,4.519e-05,1.138e-05,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+const KW = [5.8e-05,6.203e-05,6.7e-05,7.312e-05,7.9e-05,8.551e-05,9.2e-05,9.801e-05,0.000104,0.000109,0.000114,0.000119,0.000124,0.0001289,0.000135,0.0001424,0.000152,0.0001643,0.000181,0.0002031,0.000238,0.0002819,0.000329,0.0003767,0.000409,0.0004176,0.000429,0.0004631,0.000495,0.0005363,0.000588,0.0006391,0.000672,0.0007084,0.000759,0.0008386,0.000952,0.001119,0.001356,0.001635,0.002224,0.002519,0.002691,0.002753,0.00281,0.002881,0.002955,0.003023,0.003111,0.003202,0.003315,0.003461,0.003791,0.004049,0.004122,0.004196,0.004318,0.0045,0.00476,0.005154,0.005722,0.006463,0.007415,0.008763,0.01072,0.01319,0.01621,0.02101,0.02532,0.02689,0.02733,0.02751,0.02771,0.02773,0.02754,0.0272,0.02659,0.02593,0.02466,0.02355,0.02246,0.02201,0.02188,0.02233,0.02329,0.0262,0.03214,0.03702,0.03949,0.04075,0.04199,0.04306,0.04454,0.04605,0.04752,0.05006,0.05298,0.05566,0.05831,0.06094,0.06407,0.06699,0.07085,0.0763,0.08528,0.1012,0.1246,0.1465,0.1818,0.2287,0.2976,0.3785,0.4385,0.4701,0.48,0.487,0.4821,0.471,0.4532,0.4316,0.4072,0.3816,0.3521,0.3243,0.2957,0.2672,0.2391,0.2198,0.1981,0.1818,0.1664,0.1545,0.1475,0.1433,0.1409,0.1414,0.1443,0.1534,0.1632,0.1739,0.1906,0.2051,0.2219,0.2342,0.2528,0.2811,0.3378,0.4502,0.6052,0.8064,0.9769,1.119,1.17,1.197,1.207,1.232,1.239,1.256,1.267,1.28,1.272,1.271,1.257,1.243,1.214,1.2,1.189,1.166,1.155,1.133,1.116,1.101,1.094,1.083,1.08,1.104,1.121,1.164,1.196,1.252,1.323,1.416,1.532,1.672,1.831,2.007,2.243,2.479,2.701,2.96,3.226,3.449,3.701,3.985,4.389,5.092,6.242,8.089,10.63,13.69,17.14,20.29,23.13,25.33,27.01,28.35,29.26,29.93,30.36,30.53,30.54,30.35,29.98,29.17,28,26.64,25.22,23.88,22.5,21.07,19.72,18.47,17.34,16.23,15.25,14.32,13.48,12.65,11.93,11.26,10.64,10.11,9.66,9.202,8.82,8.448,8.104,7.773,7.495,7.203,6.987,6.776,6.63,6.474,6.345,6.186,6.076,5.982,5.911,5.798,5.705,5.644,5.618,5.582,5.545,5.525,5.524,5.516,5.519,5.523,5.571,5.636,5.733,5.811,5.93,6.051,6.198,6.369,6.571,6.796,7.054,7.339,7.669,7.952,8.205,8.394,8.535,8.67,8.777,8.807,8.789,8.738,8.755,8.794,8.854,8.888,9.01,9.259,9.633,10.18,10.94,12.08,13.75,16.41,20.51,26.22,35.04,47.89,64.01,81.57,97.22,109.7,119,124.8,128.6,130.4,130.4,128.7,125.6,121.6,117,111.8,106.6,101.4,96.31,91.21,86.11,81.51,77.23,72.98,69.24,65.48,62.32,59.07,56.32,53.56,50.98,48.6,46.35,44.26,42.28,40.46,38.68,36.87,35.36,33.92,32.51,31.27,29.99,28.88,27.76,26.71,25.84,25.01,24.2,23.42,22.75,22.14,21.62,21.12,20.67,20.27,19.87,19.58,19.33,19.09,18.84,18.6,18.43,18.37,18.34,18.33,18.29,18.3,18.37,18.43,18.57,18.67,18.88,19.13,19.4,19.73,20.04,20.46,20.87,21.35,21.83,22.34,23.01,23.63,24.33,24.95,25.79,26.64,27.44,28.38,29.34,30.38,31.45,32.38,33.48,34.68,35.92,37.16,38.48,40.07,41.47,42.93,44.39,45.9,47.64,49.17,50.78,52.75,54.62,56.86,58.78,61.07,63.16,65.74,68.42,70.84,73.81,76.75,79.7,82.15,85.1,87.62,90.89,93.33,95.3];
+const KM = [109.7,82.31,63,47.23,35.67,26.79,20.24,14.81,10.96,8.508,6.66,5.573,4.575,3.945,3.462,3.051,2.803,2.679,2.573,2.486,2.417,2.365,2.328,2.307,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.3,2.303,2.312,2.327,2.346,2.369,2.395,2.424,2.454,2.486,2.519,2.551,2.583,2.613,2.642,2.667,2.689,2.708,2.721,2.729,2.721,2.698,2.682,2.671,2.683,2.665,2.664,2.686,2.717,2.763,2.865,2.953,2.888,2.891,2.929,3.111,2.98,2.979,3.099,3.071,3.094,3.191,3.419,3.708,4.071,4.48,4.846,5.131,5.358,5.5,5.582,5.675,5.711,5.741,5.757,5.81,5.827,5.922,5.982,6.025,6.027,5.987,5.951,5.925,5.876,5.807,5.776,5.762,5.751,5.744,5.732,5.715,5.713,5.754,5.746,5.747,5.745,5.712,5.685,5.59,5.517,5.438,5.376,5.301,5.253,5.204,5.177,5.135,5.126,5.114,5.152,5.257,5.389,5.562,5.743,5.798,6.022,6.266,6.542,6.771,7.006,7.199,7.361,7.525,7.653,7.721,7.695,7.555,7.408,7.332,7.291,7.264,7.186,7.069,6.889,6.694,6.522,6.494,6.43,6.365,6.314,6.242,6.205,6.143,6.063,6.007,5.954,5.873,5.681,5.594,5.539,5.474,5.44,5.452,5.228,5.112,5.185,5.224,5.441,5.757,6.193,6.838,7.506,8.071,8.449,8.759,8.949,9.044,9.041,9.016,8.957,8.891,8.861,8.855,8.833,8.818,8.795,8.746,8.811,8.944,9.076,9.255,9.516,9.845,10.39,11.03,11.81,12.69,13.64,14.61,15.54,16.37,16.98,17.39,17.71,17.95,18.2,18.46,18.71,18.96,19.21,19.36,19.53,19.66,19.74,19.82,19.89,20.01,20.14,20.23,20.28,20.29,20.3,20.25,20.12,19.96,19.69,19.41,19.12,18.81,18.52,18.24,17.98,17.75,17.63,17.66,17.95,18.51,19.32,20.4,21.63,22.9,24.1,25.21,26.26,27.01,27.63,28.36,29.13,29.7,30.28,30.7,30.72,30.34,30,29.81,29.79,30,30.22,30.27,30.1,29.75,29.26,28.82,28.58,28.34,28.03,27.9,27.81,27.82,27.83,28.04,28.17,28.53,28.98,29.59,30.35,31.22,32.04,33.15,34.26,35.39,36.36,37.11,38.12,38.77,39,39.28,39.53,39.36,38.71];
+const RSOIL1 = [0.2377,0.2356,0.2336,0.2316,0.2295,0.2267,0.2246,0.2231,0.2215,0.2214,0.2217,0.2221,0.2228,0.2236,0.2245,0.2256,0.2266,0.2278,0.2289,0.231,0.2333,0.2366,0.2392,0.2413,0.2436,0.2462,0.2487,0.2512,0.2537,0.2561,0.2587,0.2614,0.2642,0.2664,0.2683,0.2702,0.2727,0.2752,0.2777,0.2802,0.2828,0.2855,0.2884,0.2913,0.2939,0.2965,0.299,0.3013,0.3035,0.3057,0.308,0.3109,0.3149,0.3182,0.321,0.3238,0.3269,0.33,0.3322,0.3338,0.3355,0.3385,0.3418,0.3444,0.3469,0.3504,0.3545,0.3564,0.3583,0.3604,0.3632,0.366,0.3695,0.3719,0.3733,0.3747,0.3773,0.3799,0.3822,0.3839,0.3857,0.3881,0.3906,0.3933,0.3961,0.3987,0.4007,0.4021,0.4034,0.4056,0.4079,0.4094,0.4107,0.4122,0.415,0.4175,0.4193,0.4211,0.4227,0.424,0.4252,0.4267,0.4284,0.4302,0.4324,0.4346,0.4368,0.4381,0.4394,0.4409,0.4424,0.4438,0.4442,0.4447,0.4462,0.4477,0.449,0.4502,0.452,0.4545,0.4565,0.4579,0.4581,0.4586,0.4599,0.4611,0.462,0.4628,0.4626,0.4625,0.4628,0.4631,0.4636,0.4658,0.4673,0.4677,0.4681,0.4688,0.4698,0.4714,0.4718,0.4715,0.4728,0.4742,0.4749,0.4749,0.4749,0.4759,0.477,0.4782,0.4793,0.4796,0.4795,0.4811,0.4811,0.482,0.4842,0.4855,0.4864,0.4863,0.4864,0.4874,0.4877,0.4879,0.4892,0.4896,0.49,0.4905,0.4916,0.4929,0.493,0.4924,0.4934,0.4939,0.4941,0.4947,0.4954,0.4967,0.4979,0.4988,0.4987,0.4987,0.4987,0.4987,0.4987,0.4987,0.4986,0.4987,0.4994,0.5002,0.5004,0.5004,0.4995,0.4989,0.4989,0.4989,0.4988,0.4944,0.4926,0.4926,0.4926,0.4926,0.4925,0.4962,0.4992,0.5003,0.5007,0.5008,0.5008,0.5008,0.5004,0.5006,0.5019,0.5026,0.5032,0.5034,0.5024,0.5015,0.5025,0.5035,0.5041,0.5033,0.5042,0.5054,0.5072,0.5074,0.5067,0.5067,0.5074,0.508,0.5077,0.5071,0.5078,0.5084,0.5084,0.5084,0.5085,0.5094,0.5103,0.5106,0.5095,0.5085,0.509,0.5096,0.509,0.5084,0.5082,0.5082,0.5082,0.5082,0.5099,0.5111,0.5102,0.5093,0.5084,0.5081,0.508,0.508,0.508,0.509,0.5103,0.5116,0.5121,0.5123,0.5107,0.5095,0.5098,0.5083,0.5091,0.5096,0.5096,0.5102,0.5105,0.5094,0.5084,0.5076,0.5084,0.5095,0.5095,0.5095,0.5095,0.5094,0.5094,0.5074,0.5069,0.5082,0.5079,0.5064,0.5076,0.5095,0.5108,0.5119,0.5134,0.5155,0.5146,0.5124,0.5016,0.5015,0.5034,0.5055,0.5086,0.5085,0.5064,0.5042,0.5023,0.5003,0.5003,0.4946,0.4927,0.4908,0.4901,0.4906,0.49,0.49,0.4909,0.4918,0.4976,0.4977,0.4977,0.4978,0.4979,0.4988,0.5002,0.5013,0.5025,0.5037,0.504,0.504,0.5062,0.5076,0.5076,0.5081,0.5101,0.5098,0.5083,0.5071,0.5071,0.507,0.5068,0.5065,0.5058,0.5039,0.5058,0.5051,0.5044,0.506,0.5035,0.5055,0.5044,0.5028,0.5011,0.5,0.499,0.4979,0.497,0.4979,0.4979,0.4895,0.4865,0.4836,0.4821,0.4816,0.4815,0.4823,0.4844,0.4867,0.4896,0.4926,0.4917,0.4902,0.4901,0.4897,0.4887,0.4898,0.4908,0.4918,0.4929,0.4916,0.4886,0.4882,0.4866,0.485,0.4835,0.4823,0.4823,0.4823,0.4822,0.4801,0.4781,0.4768,0.4772,0.4775,0.478,0.4773,0.4759,0.4745,0.4752,0.4755,0.4736,0.4733,0.4723,0.4699,0.4678,0.4678,0.4677,0.4666,0.4645,0.4623,0.4606,0.4588,0.4571,0.4554,0.4538,0.4523,0.4519,0.4516,0.4502,0.4488,0.4482,0.4482,0.4464];
+const RSOIL2 = [0.03208,0.03141,0.03059,0.0298,0.02923,0.02865,0.02808,0.02735,0.0266,0.0259,0.02529,0.02502,0.02501,0.025,0.02499,0.02497,0.02423,0.02422,0.02421,0.02566,0.02564,0.02563,0.02598,0.02597,0.02596,0.02595,0.02593,0.02592,0.027,0.02699,0.0288,0.02879,0.02878,0.02877,0.02912,0.02911,0.0295,0.0309,0.03089,0.03088,0.03087,0.03145,0.03157,0.03156,0.03191,0.03227,0.03408,0.03406,0.03498,0.03586,0.03621,0.03693,0.03777,0.038,0.03945,0.03943,0.04124,0.0416,0.04195,0.04194,0.04193,0.04301,0.04457,0.0448,0.04552,0.04624,0.04768,0.04949,0.05058,0.05136,0.05233,0.0533,0.05454,0.05489,0.05488,0.05501,0.0574,0.05804,0.05847,0.06028,0.06027,0.06208,0.0628,0.06279,0.06387,0.06616,0.06749,0.06748,0.06747,0.06896,0.07109,0.07107,0.07106,0.07139,0.07432,0.07431,0.07502,0.07595,0.07689,0.07828,0.07927,0.08007,0.08005,0.0809,0.08243,0.08389,0.08464,0.08619,0.08703,0.08872,0.08925,0.09035,0.09151,0.09341,0.09412,0.09534,0.09564,0.09591,0.09722,0.101,0.101,0.1012,0.1024,0.1035,0.1035,0.1035,0.107,0.1096,0.1096,0.1096,0.1096,0.1103,0.1114,0.1132,0.1132,0.1146,0.1156,0.1165,0.1179,0.1191,0.1195,0.1202,0.1213,0.1221,0.1229,0.1238,0.1246,0.1255,0.1265,0.1272,0.1279,0.1287,0.1294,0.1302,0.1309,0.1318,0.1327,0.1338,0.1351,0.1355,0.1369,0.1377,0.1405,0.1414,0.1416,0.1434,0.1453,0.1452,0.1456,0.1456,0.1467,0.1478,0.1481,0.1481,0.1481,0.1491,0.1495,0.1513,0.1513,0.1513,0.1533,0.1535,0.1534,0.1534,0.1534,0.1534,0.1534,0.1534,0.1526,0.1512,0.1504,0.1504,0.1486,0.1461,0.1425,0.137,0.1332,0.1275,0.1217,0.1178,0.1135,0.1103,0.1078,0.1039,0.1032,0.1018,0.101,0.101,0.101,0.101,0.1021,0.1021,0.102,0.1035,0.1039,0.1088,0.1107,0.1108,0.1139,0.1167,0.1188,0.1208,0.1227,0.1257,0.1285,0.1318,0.1332,0.1357,0.1372,0.1394,0.1405,0.1418,0.1446,0.147,0.1494,0.1511,0.1517,0.1517,0.1517,0.1538,0.1553,0.1562,0.1589,0.1592,0.16,0.16,0.1614,0.1631,0.1632,0.1632,0.1632,0.1639,0.1639,0.1639,0.1639,0.1639,0.1638,0.1642,0.1642,0.1645,0.1645,0.1645,0.1645,0.1645,0.163,0.163,0.1623,0.1623,0.1597,0.1597,0.1597,0.1586,0.1584,0.1563,0.1541,0.1541,0.1541,0.1541,0.1541,0.1541,0.1541,0.1537,0.1537,0.1537,0.1533,0.1533,0.1522,0.151,0.1478,0.1453,0.1392,0.1349,0.1306,0.1212,0.1111,0.0943,0.0889,0.08789,0.08958,0.09358,0.09624,0.09975,0.09752,0.08544,0.0764,0.06606,0.05802,0.05297,0.0494,0.04655,0.04508,0.04507,0.04615,0.04614,0.04613,0.04612,0.04683,0.04922,0.05138,0.05407,0.05685,0.05771,0.05952,0.06255,0.06486,0.06679,0.06885,0.07177,0.07623,0.07974,0.08239,0.08459,0.08737,0.08871,0.09072,0.09071,0.09162,0.09397,0.09646,0.09872,0.0994,0.1012,0.1043,0.1053,0.1081,0.1081,0.1109,0.1121,0.1124,0.1144,0.115,0.1149,0.1149,0.1149,0.1149,0.1149,0.1149,0.1152,0.1165,0.1167,0.1203,0.1196,0.1171,0.1152,0.1151,0.1151,0.1151,0.1151,0.1151,0.1151,0.1151,0.1147,0.1115,0.1114,0.1099,0.1089,0.1077,0.1061,0.1036,0.09971,0.09818,0.09817,0.09816,0.09781,0.0958,0.09369,0.09118,0.09117,0.08922,0.0875,0.08895,0.08748,0.08411,0.08019,0.07979,0.07817,0.07502,0.0747,0.07091,0.0705,0.06878,0.06877,0.06511,0.06182,0.0611,0.05652,0.05485,0.05484,0.05337,0.05336,0.05239,0.05005,0.04793,0.04711,0.0479,0.04818,0.0489,0.04962,0.0496,0.04959,0.04885];
+</script>
+<script>// Synthetic demo spectrum (PROSAIL forward run + 1.2% multiplicative noise) for the "Try example" button.
+const DEMO_REFL = [0.0169179,0.0168623,0.0172154,0.0176223,0.0175141,0.0177786,0.01834,0.0183008,0.0181063,0.0183773,0.0181193,0.0180486,0.0181185,0.0175471,0.0175328,0.0177444,0.0176142,0.0178498,0.0175115,0.017416,0.0183776,0.019071,0.0214271,0.0249897,0.030857,0.037273,0.0414983,0.0450295,0.0455392,0.0461405,0.0464229,0.0475839,0.0449569,0.0416467,0.0388272,0.034254,0.032096,0.029387,0.0283017,0.0280232,0.0275937,0.0264988,0.0250022,0.023452,0.0219918,0.0216173,0.0214847,0.0214369,0.0201542,0.0183825,0.0179901,0.0174109,0.0169452,0.0170875,0.0175367,0.018102,0.0184214,0.0190676,0.0216344,0.0321537,0.052104,0.0798227,0.109216,0.142123,0.182351,0.221973,0.254748,0.29113,0.315887,0.332155,0.350287,0.366058,0.367934,0.381567,0.367063,0.385521,0.38377,0.382791,0.385396,0.376566,0.385423,0.388861,0.394756,0.386004,0.385248,0.387207,0.394115,0.391541,0.387799,0.393153,0.391722,0.396112,0.388518,0.390538,0.390756,0.385915,0.394413,0.394455,0.393446,0.392491,0.387031,0.391823,0.392187,0.39,0.392907,0.395102,0.401183,0.392312,0.391186,0.387643,0.376038,0.381216,0.379027,0.388707,0.376438,0.378598,0.377465,0.372979,0.384564,0.384257,0.385754,0.37929,0.391498,0.379993,0.390716,0.399707,0.386532,0.389742,0.393974,0.391949,0.387796,0.396162,0.391272,0.399077,0.392674,0.404557,0.393396,0.395259,0.400336,0.390269,0.396415,0.400837,0.386377,0.394388,0.393925,0.395059,0.382963,0.37752,0.379084,0.369445,0.362274,0.357072,0.350762,0.353723,0.353645,0.348546,0.359331,0.352953,0.345646,0.352969,0.346506,0.354014,0.356143,0.348119,0.356489,0.354402,0.356206,0.361115,0.351981,0.35013,0.349655,0.349974,0.35284,0.354494,0.353792,0.354831,0.35041,0.354668,0.346126,0.356352,0.345377,0.336442,0.331849,0.333534,0.325327,0.323639,0.315479,0.306241,0.296826,0.287054,0.282877,0.280877,0.273486,0.262471,0.257968,0.243227,0.221449,0.198621,0.170567,0.143853,0.12533,0.110381,0.099583,0.0918344,0.0839613,0.0803996,0.0791051,0.0771725,0.0759119,0.0783382,0.0752647,0.0760761,0.0767036,0.0783077,0.0802304,0.0848427,0.0872338,0.0916845,0.0958624,0.101593,0.109729,0.109626,0.118406,0.120699,0.127804,0.135925,0.139602,0.143205,0.148983,0.156699,0.159044,0.165437,0.169198,0.171871,0.181587,0.182199,0.179944,0.188625,0.189966,0.197476,0.196639,0.20134,0.205215,0.208687,0.205564,0.210198,0.21157,0.212809,0.220161,0.218335,0.215075,0.220996,0.223591,0.220011,0.212595,0.215224,0.218218,0.211576,0.212603,0.211865,0.205463,0.205589,0.195562,0.199022,0.198573,0.194334,0.19949,0.191104,0.191885,0.191072,0.191352,0.181913,0.184614,0.179656,0.175875,0.178095,0.176883,0.17421,0.174854,0.173897,0.175372,0.177305,0.179291,0.17319,0.180015,0.17143,0.17429,0.173805,0.170506,0.164276,0.158822,0.149627,0.138051,0.124754,0.105667,0.0853683,0.0666471,0.0482404,0.0354129,0.0272757,0.0227292,0.0204514,0.0192949,0.0184588,0.0177145,0.017265,0.0172509,0.0167814,0.0171348,0.0172482,0.0176685,0.0185761,0.0192527,0.0201062,0.0212214,0.0220499,0.0236274,0.0247664,0.0264555,0.0279992,0.0297572,0.0318242,0.0330065,0.0361866,0.0365835,0.0383097,0.041232,0.0427869,0.0444407,0.0461019,0.0473748,0.0484475,0.0508175,0.0523696,0.0552484,0.0563556,0.0578048,0.059926,0.0624083,0.0634064,0.0650011,0.0677049,0.0693388,0.0702875,0.0719915,0.074273,0.0742271,0.0755914,0.0773137,0.078928,0.0804997,0.0826499,0.0830956,0.0829271,0.0839226,0.0838304,0.0859358,0.0866509,0.0882108,0.0876014,0.0896102,0.0911408,0.0898558,0.0907108,0.0910135,0.0896214,0.0894352,0.0880732,0.0862941,0.0831043,0.0814549,0.0793483,0.0778567,0.075061,0.0739239,0.0695438,0.0692438,0.0668662,0.0663063,0.062267,0.0604725,0.0592291,0.056766,0.0568231,0.0556697,0.0549923,0.0537151,0.0530721,0.05089,0.0487447,0.0473673,0.0469563,0.0448087,0.04535,0.0437311,0.0414188,0.0396329,0.0398681,0.0379217,0.0373063,0.0347406,0.0339881,0.0330479,0.0316737,0.0302535,0.0291905,0.0274196,0.0264435,0.0254162,0.0242759,0.0231386,0.0216254,0.0204683,0.0202344,0.0191566,0.0182851,0.0181411,0.0173251,0.0169384,0.0163461,0.0164825];
+const DEMO_TRUE_PARAMS = {N:1.5, Cab:42, Car:9, Cbrown:0.05, Cw:0.012, Cm:0.006, LAI:2.8, LIDFa:50, Psoil:0.45, Rsoil:0.55};
+const DEMO_GEOM = {tts:30, tto:0, psi:0};
+</script>
+<script>// PROSAIL (PROSPECT-5 + 4SAIL) forward model — JS port, validated against the
+// `prosail` Python reference package (jgomezdans/prosail), at 5nm sampling.
+
+function calctavArr(alphaDeg, nrArr) {
+  const sa = Math.sin(alphaDeg * Math.PI / 180);
+  const n = nrArr.length;
+  const out = new Float64Array(n);
+  for (let i = 0; i < n; i++) {
+    const nr = nrArr[i];
+    const n2 = nr * nr;
+    const npx = n2 + 1;
+    const nm = n2 - 1;
+    const a = (nr + 1) * (nr + 1) / 2;
+    const k = -(n2 - 1) * (n2 - 1) / 4;
+    let b1;
+    if (alphaDeg !== 90) {
+      const inner = (sa * sa - npx / 2) * (sa * sa - npx / 2) + k;
+      b1 = Math.sqrt(inner);
+    } else {
+      b1 = 0;
+    }
+    const b2 = sa * sa - npx / 2;
+    const b = b1 - b2;
+    const b3 = b * b * b;
+    const a3 = a * a * a;
+    const ts = (k * k / (6 * b3) + k / b - b / 2) - (k * k / (6 * a3) + k / a - a / 2);
+    const tp1 = -2 * n2 * (b - a) / (npx * npx);
+    const tp2 = -2 * n2 * npx * Math.log(b / a) / (nm * nm);
+    const tp3 = n2 * (1 / b - 1 / a) / 2;
+    const tp4 = 16 * n2 * n2 * (n2 * n2 + 1) * Math.log((2 * npx * b - nm * nm) / (2 * npx * a - nm * nm)) / (npx * npx * npx * nm * nm);
+    const tp5 = 16 * n2 * n2 * n2 * (1 / (2 * npx * b - nm * nm) - 1 / (2 * npx * a - nm * nm)) / (npx * npx * npx);
+    const tp = tp1 + tp2 + tp3 + tp4 + tp5;
+    out[i] = (ts + tp) / (2 * sa * sa);
+  }
+  return out;
+}
+
+// PROSPECT-5 leaf optical properties. lib = {NR,KAB,KCAR,KBROWN,KW,KM} arrays.
+function prospect5(N, cab, car, cbrown, cw, cm, lib, alpha) {
+  alpha = alpha === undefined ? 40 : alpha;
+  const n = lib.NR.length;
+  const kall = new Float64Array(n);
+  for (let i = 0; i < n; i++) {
+    kall[i] = (cab * lib.KAB[i] + car * lib.KCAR[i] + cbrown * lib.KBROWN[i] + cw * lib.KW[i] + cm * lib.KM[i]) / N;
+  }
+  const tau = new Float64Array(n);
+  for (let i = 0; i < n; i++) {
+    const k = kall[i];
+    if (k > 0) {
+      const t1 = (1 - k) * Math.exp(-k);
+      const t2 = k * k * (-expi(-k));
+      tau[i] = t1 + t2;
+    } else {
+      tau[i] = 1.0;
+    }
+  }
+  const talf = calctavArr(alpha, lib.NR);
+  const t12 = calctavArr(90, lib.NR);
+  const refl = new Float64Array(n);
+  const trans = new Float64Array(n);
+  for (let i = 0; i < n; i++) {
+    const nr = lib.NR[i];
+    const ralf = 1 - talf[i];
+    const r12 = 1 - t12[i];
+    const t21 = t12[i] / (nr * nr);
+    const r21 = 1 - t21;
+    const tausq = tau[i] * tau[i];
+    const denom = 1 - r21 * r21 * tausq;
+    const Ta = talf[i] * tau[i] * t21 / denom;
+    const Ra = ralf + r21 * tau[i] * Ta;
+    const t = t12[i] * tau[i] * t21 / denom;
+    const r = r12 + r21 * tau[i] * t;
+
+    const D = Math.sqrt((1 + r + t) * (1 + r - t) * (1 - r + t) * (1 - r - t));
+    const rq = r * r, tq = t * t;
+    const a = (1 + rq - tq + D) / (2 * r);
+    const b = (1 - rq + tq + D) / (2 * t);
+    const bNm1 = Math.pow(b, N - 1);
+    const bN2 = bNm1 * bNm1;
+    const a2 = a * a;
+    let denom2 = a2 * bN2 - 1;
+    let Rsub = a * (bN2 - 1) / denom2;
+    let Tsub = bNm1 * (a2 - 1) / denom2;
+    if (r + t >= 1) {
+      Tsub = t / (t + (1 - t) * (N - 1));
+      Rsub = 1 - Tsub;
+    }
+    const denom3 = 1 - Rsub * r;
+    trans[i] = Ta * Tsub / denom3;
+    refl[i] = Ra + Ta * Rsub * t / denom3;
+  }
+  return { refl, trans };
+}
+
+// Exponential integral Ei(x) for x<0 (we only ever call expi(-k) with k>0, i.e. negative arg).
+// Port of a standard rational/series approximation (Abramowitz & Stegun 5.1.53 / continued fraction),
+// matching scipy.special.expi to high precision for our use range.
+function expi(x) {
+  // Only used as expi(-k), k>0 => x<0 here. Implements E1(-x) relation: Ei(x) = -E1(-x) for x<0.
+  const t = -x; // t>0
+  return -e1(t);
+}
+function e1(x) {
+  // Continued fraction / series for E1(x), x>0, per Numerical Recipes.
+  if (x <= 0) throw new Error('e1 domain');
+  if (x < 1) {
+    // series: E1(x) = -gamma - ln(x) + sum_{k=1}^inf (-1)^{k+1} x^k / (k*k!)
+    const EULER = 0.5772156649015329;
+    let sum = 0, term = 1, fact = 1;
+    for (let k = 1; k <= 40; k++) {
+      term *= -x;
+      fact *= k;
+      const add = term / (k * fact);
+      sum += add;
+      if (Math.abs(add) < 1e-16 * Math.abs(sum || 1)) break;
+    }
+    return -EULER - Math.log(x) - sum;
+  } else {
+    // continued fraction (Lentz) for E1(x) = exp(-x)/x * (1/(1+1/(x+1/(1+...))))  -- use asymptotic CF
+    const tiny = 1e-300;
+    let b = x + 1, c = 1 / tiny, d = 1 / b, h = d;
+    for (let i = 1; i <= 200; i++) {
+      const an = -i * i;
+      b += 2;
+      d = 1 / (an * d + b);
+      c = b + an / c;
+      if (Math.abs(c) < tiny) c = tiny;
+      const del = c * d;
+      h *= del;
+      if (Math.abs(del - 1) < 1e-15) break;
+    }
+    return Math.exp(-x) * h;
+  }
+}
+
+function campbellLIDF(alphaDeg, nElements) {
+  nElements = nElements || 18;
+  const excent = Math.exp(-1.6184e-5 * Math.pow(alphaDeg, 3) + 2.1145e-3 * Math.pow(alphaDeg, 2) - 1.2390e-1 * alphaDeg + 3.2491);
+  const step = 90 / nElements;
+  const freq = new Float64Array(nElements);
+  for (let i = 0; i < nElements; i++) {
+    const tl1 = (i * step) * Math.PI / 180;
+    const tl2 = ((i + 1) * step) * Math.PI / 180;
+    const x1 = excent / Math.sqrt(1 + excent * excent * Math.pow(Math.tan(tl1), 2));
+    const x2 = excent / Math.sqrt(1 + excent * excent * Math.pow(Math.tan(tl2), 2));
+    let f;
+    if (excent === 1) {
+      f = Math.abs(Math.cos(tl1) - Math.cos(tl2));
+    } else {
+      const alph = excent / Math.sqrt(Math.abs(1 - excent * excent));
+      const alph2 = alph * alph;
+      const x12 = x1 * x1, x22 = x2 * x2;
+      if (excent > 1) {
+        const alpx1 = Math.sqrt(alph2 + x12);
+        const alpx2 = Math.sqrt(alph2 + x22);
+        const dum = x1 * alpx1 + alph2 * Math.log(x1 + alpx1);
+        f = Math.abs(dum - (x2 * alpx2 + alph2 * Math.log(x2 + alpx2)));
+      } else {
+        const almx1 = Math.sqrt(Math.max(alph2 - x12, 0));
+        const almx2 = Math.sqrt(Math.max(alph2 - x22, 0));
+        const dum = x1 * almx1 + alph2 * Math.asin(Math.min(1, x1 / alph));
+        f = Math.abs(dum - (x2 * almx2 + alph2 * Math.asin(Math.min(1, x2 / alph))));
+      }
+    }
+    freq[i] = f;
+  }
+  let sum0 = 0;
+  for (let i = 0; i < nElements; i++) sum0 += freq[i];
+  const lidf = new Float64Array(nElements);
+  for (let i = 0; i < nElements; i++) lidf[i] = freq[i] / sum0;
+  return lidf;
+}
+
+function volscatt(tts, tto, psi, ttl) {
+  const rad = Math.PI / 180;
+  const cts = Math.cos(tts * rad), cto = Math.cos(tto * rad);
+  const sts = Math.sin(tts * rad), sto = Math.sin(tto * rad);
+  const cospsi = Math.cos(psi * rad);
+  const psir = psi * rad;
+  const cttl = Math.cos(ttl * rad), sttl = Math.sin(ttl * rad);
+  const cs = cttl * cts, co = cttl * cto;
+  const ss = sttl * sts, so = sttl * sto;
+  let cosbts = 5;
+  if (Math.abs(ss) > 1e-6) cosbts = -cs / ss;
+  let cosbto = 5;
+  if (Math.abs(so) > 1e-6) cosbto = -co / so;
+  let bts, ds;
+  if (Math.abs(cosbts) < 1) { bts = Math.acos(cosbts); ds = ss; }
+  else { bts = Math.PI; ds = cs; }
+  const chi_s = 2 / Math.PI * ((bts - Math.PI * 0.5) * cs + Math.sin(bts) * ss);
+  let bto, doo;
+  if (Math.abs(cosbto) < 1) { bto = Math.acos(cosbto); doo = so; }
+  else {
+    if (tto < 90) { bto = Math.PI; doo = co; }
+    else { bto = 0; doo = -co; }
+  }
+  const chi_o = 2 / Math.PI * ((bto - Math.PI * 0.5) * co + Math.sin(bto) * so);
+  const btran1 = Math.abs(bts - bto);
+  const btran2 = Math.PI - Math.abs(bts + bto - Math.PI);
+  let bt1, bt2, bt3;
+  if (psir <= btran1) { bt1 = psir; bt2 = btran1; bt3 = btran2; }
+  else {
+    bt1 = btran1;
+    if (psir <= btran2) { bt2 = psir; bt3 = btran2; }
+    else { bt2 = btran2; bt3 = psir; }
+  }
+  const t1 = 2 * cs * co + ss * so * cospsi;
+  let t2 = 0;
+  if (bt2 > 0) t2 = Math.sin(bt2) * (2 * ds * doo + ss * so * Math.cos(bt1) * Math.cos(bt3));
+  const denom = 2 * Math.PI * Math.PI;
+  let frho = ((Math.PI - bt2) * t1 + t2) / denom;
+  let ftau = (-bt2 * t1 + t2) / denom;
+  if (frho < 0) frho = 0;
+  if (ftau < 0) ftau = 0;
+  return [chi_s, chi_o, frho, ftau];
+}
+
+function weightedSumOverLIDF(lidf, tts, tto, psi) {
+  let ks = 0, ko = 0, bf = 0, sob = 0, sof = 0;
+  const cts = Math.cos(tts * Math.PI / 180), cto = Math.cos(tto * Math.PI / 180);
+  const ctscto = cts * cto;
+  const nAngles = lidf.length;
+  const angleStep = 90 / nAngles;
+  for (let i = 0; i < nAngles; i++) {
+    const ttl = i * angleStep + angleStep * 0.5;
+    const cttl = Math.cos(ttl * Math.PI / 180);
+    const [chi_s, chi_o, frho, ftau] = volscatt(tts, tto, psi, ttl);
+    const ksli = chi_s / cts;
+    const koli = chi_o / cto;
+    const sobli = frho * Math.PI / ctscto;
+    const sofli = ftau * Math.PI / ctscto;
+    const bfli = cttl * cttl;
+    ks += ksli * lidf[i];
+    ko += koli * lidf[i];
+    bf += bfli * lidf[i];
+    sob += sobli * lidf[i];
+    sof += sofli * lidf[i];
+  }
+  return { ks, ko, bf, sob, sof };
+}
+
+function hotspotCalculations(alf, lai, ko, ks) {
+  const fhot = lai * Math.sqrt(ko * ks);
+  let x1 = 0, y1 = 0, f1 = 1;
+  const fint = (1 - Math.exp(-alf)) * 0.05;
+  let sumint = 0;
+  for (let istep = 1; istep <= 20; istep++) {
+    let x2;
+    if (istep < 20) x2 = -Math.log(1 - istep * fint) / alf;
+    else x2 = 1;
+    const y2 = -(ko + ks) * lai * x2 + fhot * (1 - Math.exp(-alf * x2)) / alf;
+    const f2 = Math.exp(y2);
+    sumint += (f2 - f1) * (x2 - x1) / (y2 - y1);
+    x1 = x2; y1 = y2; f1 = f2;
+  }
+  let tsstoo = f1;
+  if (Number.isNaN(sumint)) sumint = 0;
+  return { tsstoo, sumint };
+}
+
+function Jfunc1Arr(k, lArr, t) {
+  const n = lArr.length;
+  const out = new Float64Array(n);
+  for (let i = 0; i < n; i++) {
+    const l = lArr[i];
+    const del_ = (k - l) * t;
+    if (Math.abs(del_) > 1e-3) {
+      out[i] = (Math.exp(-l * t) - Math.exp(-k * t)) / (k - l);
+    } else {
+      out[i] = 0.5 * t * (Math.exp(-k * t) + Math.exp(-l * t)) * (1 - (del_ * del_) / 12);
+    }
+  }
+  return out;
+}
+function Jfunc2Arr(k, lArr, t) {
+  const n = lArr.length;
+  const out = new Float64Array(n);
+  for (let i = 0; i < n; i++) {
+    out[i] = (1 - Math.exp(-(k + lArr[i]) * t)) / (k + lArr[i]);
+  }
+  return out;
+}
+
+// 4SAIL canopy model. Returns rsot array (Single Discrete-direction Reflectance / BRF), length n.
+function foursail(rho, tau, lidfa, lidfb, lidftype, lai, hotspot, tts, tto, psi, rsoil) {
+  const n = rho.length;
+  const cts = Math.cos(tts * Math.PI / 180), cto = Math.cos(tto * Math.PI / 180);
+  const tants = Math.tan(tts * Math.PI / 180), tanto = Math.tan(tto * Math.PI / 180);
+  const cospsi = Math.cos(psi * Math.PI / 180);
+  const dso = Math.sqrt(tants * tants + tanto * tanto - 2 * tants * tanto * cospsi);
+
+  let lidf;
+  if (lidftype === 1) throw new Error('verhoef bimodal LIDF not implemented in this port');
+  else lidf = campbellLIDF(lidfa, 18);
+
+  const { ks, ko, bf, sob, sof } = weightedSumOverLIDF(lidf, tts, tto, psi);
+
+  const sdb = 0.5 * (ks + bf), sdf = 0.5 * (ks - bf);
+  const dob = 0.5 * (ko + bf), dof = 0.5 * (ko - bf);
+  const ddb = 0.5 * (1 + bf), ddf = 0.5 * (1 - bf);
+
+  if (lai <= 0) {
+    const rsot = new Float64Array(n);
+    for (let i = 0; i < n; i++) rsot[i] = rsoil[i];
+    return rsot;
+  }
+
+  const sigb = new Float64Array(n), sigf = new Float64Array(n);
+  const att = new Float64Array(n), m = new Float64Array(n);
+  const sb = new Float64Array(n), sf = new Float64Array(n);
+  const vb = new Float64Array(n), vf = new Float64Array(n);
+  const w = new Float64Array(n);
+  for (let i = 0; i < n; i++) {
+    let sb_ = ddb * rho[i] + ddf * tau[i];
+    let sf_ = ddf * rho[i] + ddb * tau[i];
+    if (sf_ === 0) sf_ = 1e-36;
+    if (sb_ === 0) sb_ = 1e-36;
+    sigb[i] = sb_; sigf[i] = sf_;
+    att[i] = 1 - sf_;
+    m[i] = Math.sqrt(Math.max(att[i] * att[i] - sb_ * sb_, 0));
+    sb[i] = sdb * rho[i] + sdf * tau[i];
+    sf[i] = sdf * rho[i] + sdb * tau[i];
+    vb[i] = dob * rho[i] + dof * tau[i];
+    vf[i] = dof * rho[i] + dob * tau[i];
+    w[i] = sob * rho[i] + sof * tau[i];
+  }
+
+  const e1 = new Float64Array(n), e2 = new Float64Array(n);
+  const rinf = new Float64Array(n), rinf2 = new Float64Array(n);
+  const re = new Float64Array(n), denomArr = new Float64Array(n);
+  for (let i = 0; i < n; i++) {
+    e1[i] = Math.exp(-m[i] * lai);
+    e2[i] = e1[i] * e1[i];
+    rinf[i] = (att[i] - m[i]) / sigb[i];
+    rinf2[i] = rinf[i] * rinf[i];
+    re[i] = rinf[i] * e1[i];
+    denomArr[i] = 1 - rinf2[i] * e2[i];
+  }
+
+  const J1ks = Jfunc1Arr(ks, m, lai);
+  const J2ks = Jfunc2Arr(ks, m, lai);
+  const J1ko = Jfunc1Arr(ko, m, lai);
+  const J2ko = Jfunc2Arr(ko, m, lai);
+
+  const tdd = new Float64Array(n), rdd = new Float64Array(n);
+  const tsd = new Float64Array(n), rsd = new Float64Array(n);
+  const tdo = new Float64Array(n), rdo = new Float64Array(n);
+  for (let i = 0; i < n; i++) {
+    const Pss = (sf[i] + sb[i] * rinf[i]) * J1ks[i];
+    const Qss = (sf[i] * rinf[i] + sb[i]) * J2ks[i];
+    const Pv = (vf[i] + vb[i] * rinf[i]) * J1ko[i];
+    const Qv = (vf[i] * rinf[i] + vb[i]) * J2ko[i];
+    tdd[i] = (1 - rinf2[i]) * e1[i] / denomArr[i];
+    rdd[i] = rinf[i] * (1 - e2[i]) / denomArr[i];
+    tsd[i] = (Pss - re[i] * Qss) / denomArr[i];
+    rsd[i] = (Qss - re[i] * Pss) / denomArr[i];
+    tdo[i] = (Pv - re[i] * Qv) / denomArr[i];
+    rdo[i] = (Qv - re[i] * Pv) / denomArr[i];
+  }
+
+  const tss = Math.exp(-ks * lai);
+  const too = Math.exp(-ko * lai);
+  // Jfunc2 with two scalar rates (ks, ko): (1 - exp(-(ks+ko)*lai)) / (ks+ko)
+  const z = (1 - Math.exp(-(ks + ko) * lai)) / (ks + ko);
+
+  const rsod = new Float64Array(n);
+  for (let i = 0; i < n; i++) {
+    const Pss = (sf[i] + sb[i] * rinf[i]) * J1ks[i];
+    const Qss = (sf[i] * rinf[i] + sb[i]) * J2ks[i];
+    const g1v = (z - J1ks[i] * too) / (ko + m[i]);
+    const g2v = (z - J1ko[i] * tss) / (ks + m[i]);
+    const Tv1 = (vf[i] * rinf[i] + vb[i]) * g1v;
+    const Tv2 = (vf[i] + vb[i] * rinf[i]) * g2v;
+    const T1 = Tv1 * (sf[i] + sb[i] * rinf[i]);
+    const T2 = Tv2 * (sf[i] * rinf[i] + sb[i]);
+    const T3 = (rdo[i] * Qss + tdo[i] * Pss) * rinf[i];
+    rsod[i] = (T1 + T2 - T3) / (1 - rinf2[i]);
+  }
+
+  let alf = 1e36;
+  if (hotspot > 0) alf = (dso / hotspot) * 2 / (ks + ko);
+  let tsstoo, sumint;
+  if (alf === 0) {
+    tsstoo = tss;
+    sumint = (1 - tss) / (ks * lai);
+  } else {
+    const r = hotspotCalculations(alf, lai, ko, ks);
+    tsstoo = r.tsstoo; sumint = r.sumint;
+  }
+
+  const rsot = new Float64Array(n);
+  for (let i = 0; i < n; i++) {
+    const rsos = w[i] * lai * sumint;
+    const rso = rsos + rsod[i];
+    const dn = Math.max(1 - rsoil[i] * rdd[i], 1e-36);
+    const rsost = rso + tsstoo * rsoil[i];
+    const rsodt = ((tss + tsd[i]) * tdo[i] + (tsd[i] + tss * rsoil[i] * rdd[i]) * too) * rsoil[i] / dn;
+    rsot[i] = rsost + rsodt;
+  }
+  return rsot;
+}
+
+function runProsail(p, lib) {
+  // p: {N,Cab,Car,Cbrown,Cw,Cm,LAI,LIDFa,hspot,tts,tto,psi,Psoil,Rsoil}
+  const { refl, trans } = prospect5(p.N, p.Cab, p.Car, p.Cbrown, p.Cw, p.Cm, lib, 40);
+  const n = refl.length;
+  const rsoil0 = new Float64Array(n);
+  for (let i = 0; i < n; i++) {
+    rsoil0[i] = p.Rsoil * (p.Psoil * lib.RSOIL1[i] + (1 - p.Psoil) * lib.RSOIL2[i]);
+  }
+  return foursail(refl, trans, p.LIDFa, 0, 2, p.LAI, p.hspot, p.tts, p.tto, p.psi, rsoil0);
+}
+
+</script>
+<script>/* =================================================================
+   Spectral pre-processing
+   - Savitzky-Golay smoothing (any half-window, poly order 2 or 3)
+   - MAD-based spike/outlier removal
+   ================================================================= */
+
+function matInverse(A) {
+  const n = A.length;
+  const M = A.map((row, i) => [...row, ...Array.from({length: n}, (_, j) => i === j ? 1 : 0)]);
+  for (let col = 0; col < n; col++) {
+    let maxRow = col, maxAbs = Math.abs(M[col][col]);
+    for (let r = col + 1; r < n; r++) {
+      if (Math.abs(M[r][col]) > maxAbs) { maxAbs = Math.abs(M[r][col]); maxRow = r; }
+    }
+    [M[col], M[maxRow]] = [M[maxRow], M[col]];
+    const piv = M[col][col];
+    if (Math.abs(piv) < 1e-14) throw new Error('SG: near-singular — reduce poly order or window');
+    for (let j = 0; j < 2 * n; j++) M[col][j] /= piv;
+    for (let r = 0; r < n; r++) {
+      if (r === col) continue;
+      const f = M[r][col];
+      for (let j = 0; j < 2 * n; j++) M[r][j] -= f * M[col][j];
+    }
+  }
+  return M.map(row => row.slice(n));
+}
+
+function sgCoefficients(halfWindow, polyOrder) {
+  const W = 2 * halfWindow + 1;
+  const d = polyOrder + 1;
+  // Vandermonde: X[i][j] = (i−halfWindow)^j
+  const X = Array.from({length: W}, (_, i) =>
+    Array.from({length: d}, (_, j) => Math.pow(i - halfWindow, j)));
+  const XtX = Array.from({length: d}, (_, i) =>
+    Array.from({length: d}, (_, j) => X.reduce((s, row) => s + row[i] * row[j], 0)));
+  const inv = matInverse(XtX);
+  // X[center] = [1, 0, 0, ...] → smoothing coeffs: inv[0,j] * X[k,j]
+  return Float64Array.from({length: W}, (_, k) =>
+    inv[0].reduce((s, v, j) => s + v * X[k][j], 0));
+}
+
+function applySGFilter(data, halfWindow, polyOrder) {
+  const n = data.length;
+  const W = 2 * halfWindow + 1;
+  const coeffs = sgCoefficients(halfWindow, polyOrder);
+  const out = Float64Array.from(data);
+  for (let i = halfWindow; i < n - halfWindow; i++) {
+    let sum = 0;
+    for (let k = 0; k < W; k++) sum += coeffs[k] * data[i - halfWindow + k];
+    out[i] = Math.max(0, sum);
+  }
+  return out;
+}
+
+function arrMedian(arr) {
+  const s = arr.slice().sort((a, b) => a - b);
+  const m = Math.floor(s.length / 2);
+  return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+}
+
+function removeSpikes(data, localHalf, madMult) {
+  localHalf = localHalf || 3;
+  madMult = madMult || 3;
+  const n = data.length;
+  const out = Float64Array.from(data);
+
+  // Per-point: flag if point deviates from local median by > madMult × local MAD
+  const bigHalf = Math.min(localHalf * 3, 15);
+  const isSpike = new Uint8Array(n);
+  for (let i = localHalf; i < n - localHalf; i++) {
+    const win = Array.from(data.slice(Math.max(0, i - bigHalf), Math.min(n, i + bigHalf + 1)));
+    const localMed = arrMedian(win);
+    const localMAD = Math.max(arrMedian(win.map(v => Math.abs(v - localMed))) * 1.4826, 1e-5);
+    if (Math.abs(data[i] - localMed) > madMult * localMAD) isSpike[i] = 1;
+  }
+
+  // Linear interpolation over flagged runs
+  let i = 0;
+  while (i < n) {
+    if (!isSpike[i]) { i++; continue; }
+    let j = i + 1;
+    while (j < n && isSpike[j]) j++;
+    const lv = i > 0 ? data[i - 1] : (j < n ? data[j] : 0);
+    const rv = j < n ? data[j] : data[i - 1];
+    const span = j - i + 1;
+    for (let k = i; k < j; k++) out[k] = lv + (rv - lv) * (k - i + 1) / span;
+    i = j;
+  }
+
+  return { result: out, nSpikes: isSpike.reduce((a, b) => a + b, 0), isSpike };
+}
+
+// settings: {spikeRemoval, madMult, sgSmoothing, sgHalfWindow, sgPolyOrder}
+function preprocessSpectrum(onGrid, settings) {
+  let data = Float64Array.from(onGrid);
+  let nSpikes = 0;
+  let spikeFlags = null;
+
+  if (settings.spikeRemoval) {
+    const res = removeSpikes(data, 3, settings.madMult || 5);
+    data = res.result;
+    nSpikes = res.nSpikes;
+    spikeFlags = res.isSpike;
+  }
+  if (settings.sgSmoothing) {
+    data = applySGFilter(data, settings.sgHalfWindow || 3, settings.sgPolyOrder || 2);
+  }
+  return { data, nSpikes, spikeFlags };
+}
+</script>
+<script>/* =================================================================
+   Vegetation indices for agriculture and phenotyping
+   26 indices across 6 groups
+   ================================================================= */
+
+// WL grid: 400, 405, 410, ..., 2500 nm (5 nm steps, N_WL = 421 points)
+function rAt(onGrid, mask, targetWL) {
+  const idx = Math.round((targetWL - 400) / 5);
+  if (idx < 0 || idx >= N_WL || !mask[idx]) return null;
+  return onGrid[idx];
+}
+
+// Also try ±1 grid step if the exact nearest is masked (e.g. water-vapour exclusion)
+function rAtSoft(onGrid, mask, targetWL) {
+  let v = rAt(onGrid, mask, targetWL);
+  if (v !== null) return v;
+  const idx = Math.round((targetWL - 400) / 5);
+  for (let d = 1; d <= 3; d++) {
+    if (idx + d < N_WL && mask[idx + d]) return onGrid[idx + d];
+    if (idx - d >= 0 && mask[idx - d]) return onGrid[idx - d];
+  }
+  return null;
+}
+
+const VI_GROUP_META = {
+  'Greenness & Biomass': { color: '#2f6b3a' },
+  'Chlorophyll & N-status': { color: '#3f7d2c' },
+  'Red-edge': { color: '#5a7a3a' },
+  'Stress & Carotenoids': { color: '#c98a2b' },
+  'Water Content': { color: '#3e7ca6' },
+  'Nitrogen & Dry Matter': { color: '#7a6030' },
+};
+
+const VI_DEFS = [
+  // ── Greenness & Biomass ──
+  {
+    name: 'NDVI', full: 'Normalised Difference Vegetation Index',
+    group: 'Greenness & Biomass', ref: 'Rouse et al. 1974',
+    bands: [670, 800], prec: 3,
+    formula: r => (r[800] - r[670]) / (r[800] + r[670]),
+    range: [-1, 1],
+    interp: v => v > 0.6 ? ['High vigour', 'good'] : v > 0.35 ? ['Moderate', 'ok'] : ['Low / bare', 'bad'],
+    note: 'General vegetation vigour and green biomass proxy.',
+  },
+  {
+    name: 'EVI', full: 'Enhanced Vegetation Index',
+    group: 'Greenness & Biomass', ref: 'Huete et al. 2002',
+    bands: [480, 670, 800], prec: 3,
+    formula: r => 2.5 * (r[800] - r[670]) / (r[800] + 6 * r[670] - 7.5 * r[480] + 1),
+    range: [-0.2, 1],
+    interp: v => v > 0.45 ? ['Dense canopy', 'good'] : v > 0.2 ? ['Moderate', 'ok'] : ['Sparse / bare', 'bad'],
+    note: 'Reduces soil and atmospheric effects vs NDVI.',
+  },
+  {
+    name: 'SAVI', full: 'Soil-Adjusted Vegetation Index',
+    group: 'Greenness & Biomass', ref: 'Huete 1988',
+    bands: [670, 800], prec: 3,
+    formula: r => 1.5 * (r[800] - r[670]) / (r[800] + r[670] + 0.5),
+    range: [-1, 1],
+    interp: v => v > 0.4 ? ['Good cover', 'good'] : v > 0.2 ? ['Moderate', 'ok'] : ['Sparse', 'bad'],
+    note: 'For partially vegetated or sparse canopies.',
+  },
+  {
+    name: 'MSAVI2', full: 'Modified Soil-Adjusted VI 2',
+    group: 'Greenness & Biomass', ref: 'Qi et al. 1994',
+    bands: [670, 800], prec: 3,
+    formula: r => (2 * r[800] + 1 - Math.sqrt(Math.max(0, (2 * r[800] + 1) ** 2 - 8 * (r[800] - r[670])))) / 2,
+    range: [-1, 1],
+    interp: v => v > 0.4 ? ['Dense', 'good'] : v > 0.2 ? ['Moderate', 'ok'] : ['Sparse', 'bad'],
+    note: 'Self-adjusting soil factor; no soil line required.',
+  },
+  {
+    name: 'GNDVI', full: 'Green NDVI',
+    group: 'Greenness & Biomass', ref: 'Gitelson et al. 1996',
+    bands: [550, 780], prec: 3,
+    formula: r => (r[780] - r[550]) / (r[780] + r[550]),
+    range: [-1, 1],
+    interp: v => v > 0.5 ? ['High Cab', 'good'] : v > 0.3 ? ['Moderate', 'ok'] : ['Low Cab', 'bad'],
+    note: 'More sensitive to Cab than NDVI; less saturation.',
+  },
+  // ── Chlorophyll & N-status ──
+  {
+    name: 'CIre', full: 'Chlorophyll Index Red-edge',
+    group: 'Chlorophyll & N-status', ref: 'Gitelson et al. 2003',
+    bands: [720, 780], prec: 2,
+    formula: r => r[780] / r[720] - 1,
+    range: [0, 12],
+    interp: v => v > 4 ? ['High Cab', 'good'] : v > 2 ? ['Moderate', 'ok'] : ['Low Cab', 'bad'],
+    note: 'Linear proxy for leaf Cab; linked to N status.',
+  },
+  {
+    name: 'CIg', full: 'Chlorophyll Index Green',
+    group: 'Chlorophyll & N-status', ref: 'Gitelson et al. 2003',
+    bands: [550, 780], prec: 2,
+    formula: r => r[780] / r[550] - 1,
+    range: [0, 18],
+    interp: v => v > 5 ? ['High Cab', 'good'] : v > 2.5 ? ['Moderate', 'ok'] : ['Low Cab', 'bad'],
+    note: 'Broader spectral separation; robust to structure.',
+  },
+  {
+    name: 'MTCI', full: 'MERIS Terrestrial Chlorophyll Index',
+    group: 'Chlorophyll & N-status', ref: 'Dash & Curran 2004',
+    bands: [680, 710, 755], prec: 2,
+    formula: r => (r[755] - r[710]) / (r[710] - r[680]),
+    range: [0, 10],
+    interp: v => v > 3 ? ['High Cab', 'good'] : v > 1.5 ? ['Moderate', 'ok'] : ['Low Cab', 'bad'],
+    note: 'Designed for Sentinel-3 / MERIS; Cab and N proxy.',
+  },
+  {
+    name: 'NDRE', full: 'Normalised Difference Red-edge',
+    group: 'Chlorophyll & N-status', ref: 'Gitelson & Merzlyak 1994',
+    bands: [720, 790], prec: 3,
+    formula: r => (r[790] - r[720]) / (r[790] + r[720]),
+    range: [-1, 1],
+    interp: v => v > 0.3 ? ['Good N / Cab', 'good'] : v > 0.15 ? ['Moderate', 'ok'] : ['Low Cab', 'bad'],
+    note: 'Key for crop N management and top-dress timing.',
+  },
+  {
+    name: 'TCARI', full: 'Transformed Chlorophyll Absorption RI',
+    group: 'Chlorophyll & N-status', ref: 'Haboudane et al. 2002',
+    bands: [550, 670, 700], prec: 4,
+    formula: r => 3 * ((r[700] - r[670]) - 0.2 * (r[700] - r[550]) * (r[700] / r[670])),
+    range: [0, 0.3], invert: true,
+    interp: v => v < 0.02 ? ['Very high Cab', 'good'] : v < 0.08 ? ['Moderate', 'ok'] : ['Low Cab', 'bad'],
+    note: 'Sensitive to Cab; use TCARI/OSAVI to reduce LAI effect.',
+  },
+  {
+    name: 'MCARI', full: 'Modified Chlorophyll Absorption RI',
+    group: 'Chlorophyll & N-status', ref: 'Daughtry et al. 2000',
+    bands: [550, 670, 700], prec: 4,
+    formula: r => ((r[700] - r[670]) - 0.2 * (r[700] - r[550])) * (r[700] / r[670]),
+    range: [0, 0.15], invert: true,
+    interp: null,
+    note: 'Cab, minimises LAI effect.',
+  },
+  // ── Red-edge ──
+  {
+    name: 'REP', full: 'Red-edge Position',
+    group: 'Red-edge', ref: 'Guyot & Baret 1988',
+    bands: [670, 700, 740, 780], prec: 1, unit: 'nm',
+    formula: r => {
+      const rA = (r[670] + r[780]) / 2;
+      const denom = r[740] - r[700];
+      if (Math.abs(denom) < 1e-8) return null;
+      return 700 + 40 * ((rA - r[700]) / denom);
+    },
+    range: [695, 730],
+    interp: v => v > 720 ? ['High Cab / N', 'good'] : v > 712 ? ['Moderate', 'ok'] : ['Low Cab / stress', 'bad'],
+    note: 'Shifts to longer λ with higher Cab and N. Key phenotyping trait.',
+  },
+  {
+    name: 'RVSI', full: 'Red-edge Vegetation Stress Index',
+    group: 'Red-edge', ref: 'Merton 1998',
+    bands: [715, 735, 750], prec: 4,
+    formula: r => (r[715] + r[750]) / 2 - r[735],
+    range: [-0.02, 0.03], invert: true,
+    interp: v => v < 0 ? ['Healthy', 'good'] : v < 0.005 ? ['Mild stress', 'ok'] : ['Stressed', 'bad'],
+    note: 'Positive values indicate canopy stress.',
+  },
+  {
+    name: 'mND705', full: 'Modified Red-edge NDVI 705',
+    group: 'Red-edge', ref: 'Sims & Gamon 2002',
+    bands: [445, 705, 750], prec: 3,
+    formula: r => (r[750] - r[705]) / (r[750] + r[705] - 2 * r[445]),
+    range: [-1, 2],
+    interp: v => v > 0.5 ? ['High Cab', 'good'] : v > 0.2 ? ['Moderate', 'ok'] : ['Low Cab', 'bad'],
+    note: 'Blue correction makes this less sensitive to LAI.',
+  },
+  // ── Stress & Carotenoids ──
+  {
+    name: 'PRI', full: 'Photochemical Reflectance Index',
+    group: 'Stress & Carotenoids', ref: 'Gamon et al. 1992',
+    bands: [530, 570], prec: 4,
+    formula: r => (r[530] - r[570]) / (r[530] + r[570]),
+    range: [-0.15, 0.05],
+    interp: v => v > -0.02 ? ['Active / low stress', 'good'] : v > -0.08 ? ['Moderate', 'ok'] : ['High stress', 'bad'],
+    note: 'Tracks xanthophyll de-epoxidation; proxy for LUE.',
+  },
+  {
+    name: 'SIPI', full: 'Structure-Insensitive Pigment Index',
+    group: 'Stress & Carotenoids', ref: 'Peñuelas et al. 1995',
+    bands: [445, 680, 800], prec: 3,
+    formula: r => (r[800] - r[445]) / (r[800] + r[680]),
+    range: [0.5, 1.5],
+    interp: v => v < 0.8 ? ['Mostly Cab', 'good'] : v < 1.1 ? ['Mixed pigments', 'ok'] : ['High Car / stress', 'bad'],
+    note: 'High values = carotenoid dominance, often early stress.',
+  },
+  {
+    name: 'PSRI', full: 'Plant Senescence Reflectance Index',
+    group: 'Stress & Carotenoids', ref: 'Merzlyak et al. 1999',
+    bands: [500, 680, 750], prec: 4,
+    formula: r => (r[680] - r[500]) / r[750],
+    range: [-0.1, 0.3], invert: true,
+    interp: v => v < 0 ? ['Vegetative', 'good'] : v < 0.05 ? ['Early senescence', 'ok'] : ['Senescent', 'bad'],
+    note: 'Tracks Cab→Car transition; senescence / ripeness indicator.',
+  },
+  {
+    name: 'ARI1', full: 'Anthocyanin Reflectance Index 1',
+    group: 'Stress & Carotenoids', ref: 'Gitelson et al. 2001',
+    bands: [550, 700], prec: 2,
+    formula: r => 1 / r[550] - 1 / r[700],
+    range: [0, 10], invert: true,
+    interp: v => v < 1 ? ['Low anthocyanin', 'good'] : v < 4 ? ['Elevated', 'ok'] : ['High anthocyanin', 'bad'],
+    note: 'Quantifies leaf anthocyanin; purple discolouration or stress.',
+  },
+  {
+    name: 'ARI2', full: 'Anthocyanin Reflectance Index 2 (canopy)',
+    group: 'Stress & Carotenoids', ref: 'Gitelson et al. 2001',
+    bands: [550, 700, 800], prec: 2,
+    formula: r => r[800] * (1 / r[550] - 1 / r[700]),
+    range: [0, 5], invert: true,
+    interp: null,
+    note: 'ARI corrected for canopy structure effects via NIR.',
+  },
+  // ── Water Content ──
+  {
+    name: 'WI', full: 'Water Index',
+    group: 'Water Content', ref: 'Peñuelas et al. 1993',
+    bands: [900, 970], prec: 3,
+    formula: r => r[900] / r[970],
+    range: [0.85, 1.35],
+    interp: v => v > 1.05 ? ['Well-watered', 'good'] : v > 0.95 ? ['Moderate', 'ok'] : ['Water stress', 'bad'],
+    note: 'Simple NIR ratio; sensitive to bulk leaf water.',
+  },
+  {
+    name: 'NDWI', full: 'Normalised Difference Water Index',
+    group: 'Water Content', ref: 'Gao 1996',
+    bands: [860, 1240], prec: 3,
+    formula: r => (r[860] - r[1240]) / (r[860] + r[1240]),
+    range: [-0.5, 1],
+    interp: v => v > 0.3 ? ['High canopy water', 'good'] : v > 0.1 ? ['Moderate', 'ok'] : ['Low water', 'bad'],
+    note: 'Canopy water content; widely used for drought monitoring.',
+  },
+  {
+    name: 'MSI', full: 'Moisture Stress Index',
+    group: 'Water Content', ref: 'Rock et al. 1986',
+    bands: [820, 1600], prec: 3,
+    formula: r => r[1600] / r[820],
+    range: [0, 3], invert: true,
+    interp: v => v < 0.4 ? ['Low stress', 'good'] : v < 1.0 ? ['Moderate', 'ok'] : ['Moisture stress', 'bad'],
+    note: 'Increases under water stress; inverse of NDII-type ratio.',
+  },
+  {
+    name: 'NDII', full: 'Normalised Difference Infrared Index',
+    group: 'Water Content', ref: 'Hardisky et al. 1983',
+    bands: [820, 1650], prec: 3,
+    formula: r => (r[820] - r[1650]) / (r[820] + r[1650]),
+    range: [-0.5, 1],
+    interp: v => v > 0.35 ? ['High water', 'good'] : v > 0.1 ? ['Moderate', 'ok'] : ['Low water', 'bad'],
+    note: 'Canopy water; decreases before visual wilting.',
+  },
+  // ── Nitrogen & Dry Matter ──
+  {
+    name: 'CCCI', full: 'Canopy Chlorophyll Content Index',
+    group: 'Nitrogen & Dry Matter', ref: 'Fitzgerald et al. 2010',
+    bands: [670, 705, 750, 800], prec: 3,
+    formula: r => {
+      const ndvi = (r[800] - r[670]) / (r[800] + r[670]);
+      const ndre = (r[750] - r[705]) / (r[750] + r[705]);
+      return ndvi !== 0 ? ndre / ndvi : null;
+    },
+    range: [0, 1.0],
+    interp: v => v > 0.6 ? ['Good N status', 'good'] : v > 0.4 ? ['Moderate', 'ok'] : ['N deficient', 'bad'],
+    note: 'N status, largely decoupled from canopy cover/LAI. VIS-NIR only (400–900 nm) — works on multispectral sensors without SWIR.',
+  },
+  {
+    name: 'DD', full: 'Double Difference Index',
+    group: 'Nitrogen & Dry Matter', ref: 'le Maire et al. 2004',
+    bands: [672, 701, 720, 749], prec: 4,
+    formula: r => (r[749] - r[720]) - (r[701] - r[672]),
+    range: [-0.02, 0.22],
+    interp: v => v > 0.08 ? ['High N / Cab', 'good'] : v > 0.02 ? ['Moderate', 'ok'] : ['Low N', 'bad'],
+    note: 'Red-edge curvature; tracks foliar N and Cab. VIS-NIR only (400–900 nm).',
+  },
+  {
+    name: 'RDVI', full: 'Renormalised Difference VI',
+    group: 'Nitrogen & Dry Matter', ref: 'Roujean & Bréon 1995',
+    bands: [670, 800], prec: 3,
+    formula: r => (r[800] - r[670]) / Math.sqrt(r[800] + r[670]),
+    range: [0, 0.9],
+    interp: v => v > 0.55 ? ['High dry biomass', 'good'] : v > 0.35 ? ['Moderate', 'ok'] : ['Low biomass', 'bad'],
+    note: 'Proxy for above-ground dry biomass/yield, linear with LAI at high cover. VIS-NIR only (400–900 nm).',
+  },
+  {
+    name: 'NDNI', full: 'Normalised Difference Nitrogen Index',
+    group: 'Nitrogen & Dry Matter', ref: 'Serrano et al. 2002',
+    bands: [1510, 1680], prec: 3,
+    formula: r => {
+      const a = Math.log(1 / r[1510]), b = Math.log(1 / r[1680]);
+      return (a - b) / (a + b);
+    },
+    range: [-0.3, 0.5],
+    interp: v => v > 0.15 ? ['High N', 'good'] : v > 0.05 ? ['Moderate', 'ok'] : ['Low N', 'bad'],
+    note: 'Direct foliar N via SWIR protein absorption. Requires SWIR coverage (>1500 nm).',
+  },
+  {
+    name: 'NDLI', full: 'Normalised Difference Lignin Index',
+    group: 'Nitrogen & Dry Matter', ref: 'Serrano et al. 2002',
+    bands: [1680, 1755], prec: 3,
+    formula: r => {
+      const a = Math.log(1 / r[1755]), b = Math.log(1 / r[1680]);
+      return (a - b) / (a + b);
+    },
+    range: [-0.3, 0.5],
+    interp: null,
+    note: 'Canopy lignin via SWIR log-ratio; linked to structural dry matter. Requires SWIR coverage (>1500 nm).',
+  },
+  {
+    name: 'CAI', full: 'Cellulose Absorption Index',
+    group: 'Nitrogen & Dry Matter', ref: 'Nagler et al. 2003',
+    bands: [2000, 2090, 2200], prec: 3,
+    formula: r => 0.5 * (r[2000] + r[2200]) - r[2090],
+    range: [-0.2, 0.5],
+    interp: v => v > 0.05 ? ['High cellulose / residue', 'bad'] : v > 0 ? ['Moderate', 'ok'] : ['Live / low residue', 'good'],
+    note: 'Direct cellulose/dry matter absorption feature; crop residue mapping. Requires SWIR coverage (>2000 nm).',
+  },
+];
+
+/* ============ computation ============ */
+function computeVIs(onGrid, mask) {
+  return VI_DEFS.map(def => {
+    const r = {};
+    let available = true;
+    def.bands.forEach(wl => {
+      const v = rAtSoft(onGrid, mask, wl);
+      if (v === null || v <= 0) available = false;
+      else r[wl] = v;
+    });
+    if (!available) return { ...def, value: null, available: false };
+    try {
+      const value = def.formula(r);
+      if (value === null || !isFinite(value) || isNaN(value)) return { ...def, value: null, available: false };
+      return { ...def, value, available: true };
+    } catch (e) {
+      return { ...def, value: null, available: false };
+    }
+  });
+}
+
+/* ============ rendering ============ */
+function renderVICards(container, viResults) {
+  const groupOrder = Object.keys(VI_GROUP_META);
+  const groups = {};
+  groupOrder.forEach(g => groups[g] = []);
+  viResults.forEach(r => { if (groups[r.group]) groups[r.group].push(r); });
+
+  let html = '';
+  groupOrder.forEach(groupName => {
+    const gc = VI_GROUP_META[groupName];
+    html += `<div class="vi-group">
+      <div class="vi-group-hdr" style="color:${gc.color};border-color:${gc.color}">${groupName}</div>
+      <div class="vi-cards-row">`;
+    groups[groupName].forEach(r => {
+      if (!r.available) {
+        html += `<div class="vi-card vi-na" title="${r.full} — ${r.ref}\n${r.note || ''}">
+          <span class="vi-card-name">${r.name}</span>
+          <span class="vi-na-label">Bands unavailable</span>
+          <span class="vi-card-full">${r.full}</span>
+        </div>`;
+        return;
+      }
+      const lo = r.range[0], hi = r.range[1];
+      const pct = v => Math.max(0, Math.min(100, (v - lo) / (hi - lo) * 100));
+      const mPct = pct(r.value);
+      const prec = r.prec !== undefined ? r.prec : (Math.abs(r.value) < 0.01 ? 4 : Math.abs(r.value) < 1 ? 3 : Math.abs(r.value) < 10 ? 2 : 1);
+      const badge = r.interp ? r.interp(r.value) : null;
+      const valStr = r.value.toFixed(prec);
+      html += `<div class="vi-card" title="${r.full} — ${r.ref}\n\n${r.note || ''}">
+        <div class="vi-card-top">
+          <span class="vi-card-name">${r.name}</span>
+          <span class="vi-card-val">${valStr}${r.unit ? '<span class="vi-unit"> ' + r.unit + '</span>' : ''}</span>
+        </div>
+        <div class="vi-gauge" style="--vc:${gc.color}">
+          <div class="vi-gauge-fill" style="width:${Math.max(2,mPct)}%"></div>
+          <div class="vi-gauge-pin" style="left:${mPct}%"></div>
+        </div>
+        ${badge ? `<div class="vi-badge vi-badge-${badge[1]}">${badge[0]}</div>` : ''}
+        <div class="vi-card-full">${r.full}</div>
+      </div>`;
+    });
+    html += `</div></div>`;
+  });
+  container.innerHTML = html;
+}
+
+/* ============ CSV export ============ */
+function viToCSV(viResults, sampleName) {
+  const header = ['sample', 'index', 'full_name', 'group', 'value', 'unit', 'reference'];
+  const rows = viResults.map(r => [
+    `"${sampleName || 'sample'}"`,
+    r.name,
+    `"${r.full}"`,
+    `"${r.group}"`,
+    r.available ? r.value.toFixed(r.prec || 4) : 'N/A',
+    r.unit || '',
+    `"${r.ref}"`,
+  ].join(','));
+  return [header.join(','), ...rows].join('\n');
+}
+</script>
+<script>/* =================================================================
+   Solar position calculator
+   - NOAA solar position algorithm (Meeus-based), public-domain formulas
+   - City geocoding via OpenStreetMap Nominatim (requires internet)
+   ================================================================= */
+
+function solarDeg2rad(d){ return d*Math.PI/180; }
+function solarRad2deg(r){ return r*180/Math.PI; }
+
+function calcJD(year, month, day){
+  if(month<=2){ year-=1; month+=12; }
+  const A = Math.floor(year/100);
+  const B = 2 - A + Math.floor(A/4);
+  return Math.floor(365.25*(year+4716)) + Math.floor(30.6001*(month+1)) + day + B - 1524.5;
+}
+function calcTimeJulianCent(jd){ return (jd - 2451545.0)/36525.0; }
+function calcGeomMeanLongSun(t){
+  let L0 = 280.46646 + t*(36000.76983 + 0.0003032*t);
+  L0 = L0 % 360; if(L0<0) L0+=360;
+  return L0;
+}
+function calcGeomMeanAnomalySun(t){ return 357.52911 + t*(35999.05029 - 0.0001537*t); }
+function calcEccentricityEarthOrbit(t){ return 0.016708634 - t*(0.000042037 + 0.0000001267*t); }
+function calcSunEqOfCenter(t){
+  const m = calcGeomMeanAnomalySun(t);
+  const mrad = solarDeg2rad(m);
+  const sinm = Math.sin(mrad), sin2m = Math.sin(2*mrad), sin3m = Math.sin(3*mrad);
+  return sinm*(1.914602 - t*(0.004817 + 0.000014*t)) + sin2m*(0.019993 - 0.000101*t) + sin3m*0.000289;
+}
+function calcSunTrueLong(t){ return calcGeomMeanLongSun(t) + calcSunEqOfCenter(t); }
+function calcSunApparentLong(t){
+  const o = calcSunTrueLong(t);
+  const omega = 125.04 - 1934.136*t;
+  return o - 0.00569 - 0.00478*Math.sin(solarDeg2rad(omega));
+}
+function calcMeanObliquityOfEcliptic(t){
+  const seconds = 21.448 - t*(46.8150 + t*(0.00059 - t*0.001813));
+  return 23.0 + (26.0 + seconds/60.0)/60.0;
+}
+function calcObliquityCorrection(t){
+  const e0 = calcMeanObliquityOfEcliptic(t);
+  const omega = 125.04 - 1934.136*t;
+  return e0 + 0.00256*Math.cos(solarDeg2rad(omega));
+}
+function calcSunDeclination(t){
+  const e = calcObliquityCorrection(t);
+  const lambda = calcSunApparentLong(t);
+  const sint = Math.sin(solarDeg2rad(e))*Math.sin(solarDeg2rad(lambda));
+  return solarRad2deg(Math.asin(sint));
+}
+function calcEquationOfTime(t){
+  const epsilon = calcObliquityCorrection(t);
+  const l0 = calcGeomMeanLongSun(t);
+  const e = calcEccentricityEarthOrbit(t);
+  const m = calcGeomMeanAnomalySun(t);
+  let y = Math.tan(solarDeg2rad(epsilon)/2.0); y*=y;
+  const sin2l0=Math.sin(2*solarDeg2rad(l0)), sinm=Math.sin(solarDeg2rad(m)),
+        cos2l0=Math.cos(2*solarDeg2rad(l0)), sin4l0=Math.sin(4*solarDeg2rad(l0)), sin2m=Math.sin(2*solarDeg2rad(m));
+  const Etime = y*sin2l0 - 2*e*sinm + 4*e*y*sinm*cos2l0 - 0.5*y*y*sin4l0 - 1.25*e*e*sin2m;
+  return solarRad2deg(Etime)*4.0; // minutes
+}
+
+/**
+ * Compute solar position (NOAA algorithm).
+ * year/month/day: calendar date. hour/minute: LOCAL clock time at the site.
+ * utcOffsetHours: local time zone offset from UTC (e.g. -8 for PST, +1 for CET).
+ * lat/lon: decimal degrees (lon positive East).
+ * Returns degrees: elevation, zenith (refraction-corrected), azimuth (0-360, clockwise from North), declination.
+ */
+function calcSolarPosition(year, month, day, hour, minute, utcOffsetHours, lat, lon){
+  const jd = calcJD(year, month, day);
+  const localMinutes = hour*60 + minute;
+  const utcMinutes = localMinutes - utcOffsetHours*60;
+  const totalJD = jd + utcMinutes/1440.0;
+  const t = calcTimeJulianCent(totalJD);
+
+  const eqTime = calcEquationOfTime(t);
+  const theta = calcSunDeclination(t);
+
+  const solarTimeFix = eqTime + 4.0*lon - 60.0*utcOffsetHours;
+  let trueSolarTime = localMinutes + solarTimeFix;
+  trueSolarTime = ((trueSolarTime % 1440) + 1440) % 1440;
+
+  let hourAngle = trueSolarTime/4.0 - 180.0;
+  if(hourAngle < -180) hourAngle += 360.0;
+
+  const latRad = solarDeg2rad(lat), thetaRad = solarDeg2rad(theta), haRad = solarDeg2rad(hourAngle);
+  let csz = Math.sin(latRad)*Math.sin(thetaRad) + Math.cos(latRad)*Math.cos(thetaRad)*Math.cos(haRad);
+  csz = Math.min(1, Math.max(-1, csz));
+  const zenithGeom = solarRad2deg(Math.acos(csz));
+
+  let azimuth;
+  const azDenom = Math.cos(latRad)*Math.sin(solarDeg2rad(zenithGeom));
+  if(Math.abs(azDenom) > 0.001){
+    let azRad = (Math.sin(latRad)*Math.cos(solarDeg2rad(zenithGeom)) - Math.sin(thetaRad)) / azDenom;
+    azRad = Math.min(1, Math.max(-1, azRad));
+    azimuth = 180.0 - solarRad2deg(Math.acos(azRad));
+    if(hourAngle > 0) azimuth = -azimuth;
+  } else {
+    azimuth = (lat > 0) ? 180.0 : 0.0;
+  }
+  azimuth = ((azimuth % 360) + 360) % 360;
+
+  // Atmospheric refraction correction near the horizon (NOAA approximation)
+  let elevation = 90.0 - zenithGeom;
+  let refractionCorr = 0;
+  if(elevation > 85){ refractionCorr = 0; }
+  else if(elevation > 5){
+    const te = Math.tan(solarDeg2rad(elevation));
+    refractionCorr = 58.1/te - 0.07/(te*te*te) + 0.000086/(te*te*te*te*te);
+  } else if(elevation > -0.575){
+    refractionCorr = 1735.0 + elevation*(-518.2 + elevation*(103.4 + elevation*(-12.79 + elevation*0.711)));
+  } else {
+    refractionCorr = -20.772/Math.tan(solarDeg2rad(elevation));
+  }
+  refractionCorr /= 3600.0;
+  elevation += refractionCorr;
+  const zenith = 90.0 - elevation;
+
+  return { elevation, zenith, azimuth, declination: theta, eqTime };
+}
+
+/** Geocode a place name to {name, lat, lon} via OpenStreetMap Nominatim. Requires internet. */
+async function geocodeCity(query){
+  const url = `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(query)}`;
+  const resp = await fetch(url, { headers: { 'Accept': 'application/json' } });
+  if(!resp.ok) throw new Error('Geocoding request failed (HTTP ' + resp.status + ')');
+  const data = await resp.json();
+  if(!data.length) throw new Error('Location not found — try a more specific name, or enter coordinates directly.');
+  return { name: data[0].display_name, lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) };
+}
+
+/** Relative azimuth between solar and viewing/sensor azimuth, folded to 0-180°. */
+function relativeAzimuth(solarAz, viewAz){
+  let d = Math.abs(solarAz - viewAz) % 360;
+  if(d > 180) d = 360 - d;
+  return d;
+}
+
+/** Rough UTC offset estimate from longitude (15° per hour). A starting point only —
+ *  real time zones follow political boundaries and shift with daylight saving. */
+function estimateUTCOffset(lon){
+  return Math.max(-12, Math.min(14, Math.round(lon/15)));
+}
+</script>
+<script>/* ===================== Param definitions ===================== */
+const PARAM_DEFS = [
+  { key: 'N',      label: 'Leaf layers (N)',             short: 'N',      unit: '',       min: 0.8,  max: 3,    color: '#8a6d46', group: 'Leaf',    precision: 2, info: 'Mesophyll structure parameter (PROSPECT).' },
+  { key: 'Cab',    label: 'Chlorophyll a+b',             short: 'Cab',    unit: 'µg/cm²', min: 0,    max: 100,  color: '#3f7d2c', group: 'Pigment', precision: 1, info: 'Total leaf chlorophyll content.' },
+  { key: 'Car',    label: 'Carotenoids',                 short: 'Car',    unit: 'µg/cm²', min: 0,    max: 25,   color: '#c98a2b', group: 'Pigment', precision: 1, info: 'Leaf carotenoid content.' },
+  { key: 'Cbrown', label: 'Brown / senescent pigment',   short: 'Cbrown', unit: 'rel.',   min: 0,    max: 1,    color: '#8a5a2b', group: 'Pigment', precision: 2, info: 'Senescent pigment fraction.' },
+  { key: 'Cw',     label: 'Equivalent water thickness',  short: 'Cw',     unit: 'g/cm²',  min: 0,    max: 0.05, color: '#3e7ca6', group: 'Water',   precision: 4, info: 'Leaf water content per unit area.' },
+  { key: 'Cm',     label: 'Dry matter content',          short: 'Cm',     unit: 'g/cm²',  min: 0,    max: 0.02, color: '#9c7a3f', group: 'Leaf',    precision: 4, info: 'Leaf dry mass per unit area.' },
+  { key: 'LAI',    label: 'Leaf Area Index',             short: 'LAI',    unit: 'm²/m²',  min: 0,    max: 10,   color: '#2f6b3a', group: 'Canopy',  precision: 2, info: 'One-sided green leaf area per ground area.' },
+  { key: 'LIDFa',  label: 'Mean leaf inclination',       short: 'LIDFa',  unit: '°',      min: 0,    max: 85,   color: '#6b6b3a', group: 'Canopy',  precision: 1, info: 'Campbell ellipsoidal mean leaf angle.' },
+  { key: 'Psoil',  label: 'Soil moisture mix',           short: 'Psoil',  unit: 'rel.',   min: 0,    max: 1,    color: '#a6783e', group: 'Soil',    precision: 2, info: 'Dry/wet soil spectrum mixing fraction.' },
+  { key: 'Rsoil',  label: 'Soil brightness',             short: 'Rsoil',  unit: 'rel.',   min: 0,    max: 1,    color: '#b08c5e', group: 'Soil',    precision: 2, info: 'Overall soil background brightness.' },
+];
+const LIB = { NR, KAB, KCAR, KBROWN, KW, KM, RSOIL1, RSOIL2 };
+const N_WL = WL.length;
+
+/* ===================== App state ===================== */
+const state = {
+  spectra: [], gridSpectra: [], lut: null, results: [],
+  activeIdx: 0,
+  ppSettings: {
+    spikeRemoval: false, madMult: 3,
+    sgSmoothing: false,  sgHalfWindow: 3, sgPolyOrder: 2,
+  },
+  ppApplied: false, // whether preprocessing has been applied to current spectra
+};
+
+/* ===================== Parsing helpers ===================== */
+function splitFields(line){ return line.trim().split(/[\s,;\t]+/).filter(s=>s.length); }
+
+function parsePastedText(text){
+  const lines = text.split(/\r?\n/).map(l=>l.trim()).filter(l=>l.length && !l.startsWith('#'));
+  if(!lines.length) return null;
+  let start=0;
+  const first=splitFields(lines[0]);
+  if(first.length && isNaN(parseFloat(first[0]))) start=1;
+  const rows=lines.slice(start).map(splitFields).filter(f=>f.length>=2);
+  if(!rows.length) return null;
+  const nCols=rows[0].length;
+  const wl=rows.map(r=>parseFloat(r[0]));
+  const samples=[];
+  for(let c=1;c<nCols;c++){
+    const vals=rows.map(r=>parseFloat(r[c]));
+    samples.push({name:nCols>2?`Sample ${c}`:'Pasted spectrum', wlObs:wl.slice(), reflObs:vals});
+  }
+  return samples;
+}
+
+function parseDelimitedFile(text){
+  const lines=text.split(/\r?\n/).map(l=>l.trim()).filter(l=>l.length);
+  if(!lines.length) return null;
+  const delim=lines[0].includes(',') ? ',' : (lines[0].includes('\t') ? '\t' : /\s+/);
+  const split=l=>l.split(delim).map(s=>s.trim()).filter(s=>s.length);
+  let start=0;
+  const firstRow=split(lines[0]);
+  if(firstRow.length && isNaN(parseFloat(firstRow[1]!==undefined?firstRow[1]:firstRow[0]))) start=1;
+  else if(isNaN(parseFloat(firstRow[0]))) start=1;
+  const rows=lines.slice(start).map(split).filter(f=>f.length>=2);
+  if(!rows.length) return null;
+  const nCols=rows[0].length;
+  const wl=rows.map(r=>parseFloat(r[0]));
+  const samples=[];
+  for(let c=1;c<nCols;c++){
+    const vals=rows.map(r=>parseFloat(r[c]));
+    samples.push({name:`Sample ${c}`, wlObs:wl.slice(), reflObs:vals});
+  }
+  return samples;
+}
+
+function normalizeUnits(samples){
+  samples.forEach(s=>{
+    const maxv=Math.max(...s.reflObs.filter(v=>!isNaN(v)));
+    if(maxv>1.5){s.reflObs=s.reflObs.map(v=>v/100);s.unitsNote='Detected % reflectance → divided by 100.';}
+  });
+  return samples;
+}
+
+function sortByWavelength(s){
+  const idx=s.wlObs.map((_,i)=>i).sort((a,b)=>s.wlObs[a]-s.wlObs[b]);
+  s.wlObs=idx.map(i=>s.wlObs[i]); s.reflObs=idx.map(i=>s.reflObs[i]); return s;
+}
+
+function interpToGrid(wlObs,reflObs){
+  const onGrid=new Float64Array(N_WL), mask=new Uint8Array(N_WL);
+  const lo=wlObs[0], hi=wlObs[wlObs.length-1];
+  let j=0;
+  for(let i=0;i<N_WL;i++){
+    const x=WL[i];
+    if(x<lo||x>hi){mask[i]=0;continue;}
+    while(j<wlObs.length-2 && wlObs[j+1]<x) j++;
+    const x0=wlObs[j],x1=wlObs[j+1],y0=reflObs[j],y1=reflObs[j+1];
+    const t=x1>x0?(x-x0)/(x1-x0):0;
+    onGrid[i]=y0+t*(y1-y0); mask[i]=1;
+  }
+  return {onGrid,mask};
+}
+
+function applyAtmosphericExclusion(mask,exclude){
+  if(!exclude) return mask;
+  const out=mask.slice();
+  for(let i=0;i<N_WL;i++){const wl=WL[i];if((wl>=1350&&wl<=1450)||(wl>=1800&&wl<=1950))out[i]=0;}
+  return out;
+}
+
+function applyWavelengthWindow(mask,minWL,maxWL){
+  const out=mask.slice();
+  for(let i=0;i<N_WL;i++){if(WL[i]<minWL||WL[i]>maxWL)out[i]=0;}
+  return out;
+}
+
+function computeQuickIndices(onGrid,mask){
+  const iRed=nearestIdx(670,15), iNIR=nearestIdx(800,20), iGreen=nearestIdx(550,15);
+  const have=i=>i>=0&&mask[i];
+  let ndvi=null,cigreen=null;
+  if(have(iRed)&&have(iNIR)){const r=onGrid[iRed],nir=onGrid[iNIR]; ndvi=(nir-r)/(nir+r);}
+  if(have(iGreen)&&have(iNIR)) cigreen=onGrid[iNIR]/onGrid[iGreen]-1;
+  return {ndvi,cigreen};
+}
+
+function nearestIdx(target,tol){
+  let best=-1,bestD=Infinity;
+  for(let i=0;i<N_WL;i++){const d=Math.abs(WL[i]-target);if(d<bestD){bestD=d;best=i;}}
+  return bestD<=tol?best:-1;
+}
+
+/* ===================== Pre-processing pipeline ===================== */
+function buildPPSettings(){
+  return {
+    spikeRemoval: els.ppSpike.checked,
+    madMult: parseFloat(els.ppMad.value)||3,
+    sgSmoothing: els.ppSG.checked,
+    sgHalfWindow: parseInt(els.ppWindow.value)||3,
+    sgPolyOrder: parseInt(els.ppOrder.value)||2,
+  };
+}
+
+function applyPreprocessing(){
+  const settings = buildPPSettings();
+  state.ppSettings = settings;
+
+  let totalSpikes = 0;
+  state.gridSpectra = state.spectra.map(s=>{
+    const {onGrid, mask} = interpToGrid(s.wlObs, s.reflObs);
+    if(!settings.spikeRemoval && !settings.sgSmoothing){
+      return {name:s.name, onGrid, mask, raw:onGrid, ppApplied:false};
+    }
+    const {data, nSpikes} = preprocessSpectrum(onGrid, settings);
+    totalSpikes += nSpikes;
+    return {name:s.name, onGrid:data, mask, raw:onGrid, ppApplied:true};
+  });
+  state.ppApplied = settings.spikeRemoval || settings.sgSmoothing;
+
+  let msg = '✓ Pre-processing applied: ';
+  const parts = [];
+  if(settings.spikeRemoval) parts.push(`spike removal (${totalSpikes} total corrected)`);
+  if(settings.sgSmoothing) parts.push(`SG smoothing (window ${2*settings.sgHalfWindow+1} pts, order ${settings.sgPolyOrder})`);
+  if(!parts.length) msg = '✓ No pre-processing active — original spectrum used.';
+  else msg += parts.join(' + ');
+  els.ppStatus.textContent = msg;
+  els.ppStatus.classList.add('active');
+
+  // Update chart and VIs
+  renderPreview();
+  computeAndShowVIs();
+}
+
+/* ===================== LUT generation ===================== */
+function randRange(a,b){ return a+Math.random()*(b-a); }
+
+async function generateLUT(nSamples,ranges,geom,onProgress){
+  const params=new Float32Array(nSamples*10);
+  const spectra=new Float32Array(nSamples*N_WL);
+  const CHUNK=250;
+  let s=0;
+  while(s<nSamples){
+    const end=Math.min(s+CHUNK,nSamples);
+    for(;s<end;s++){
+      const N=randRange(ranges.N[0],ranges.N[1]);
+      const Cab=randRange(ranges.Cab[0],ranges.Cab[1]);
+      const Car=randRange(ranges.Car[0],ranges.Car[1]);
+      const Cbrown=randRange(ranges.Cbrown[0],ranges.Cbrown[1]);
+      const Cw=randRange(ranges.Cw[0],ranges.Cw[1]);
+      const Cm=randRange(ranges.Cm[0],ranges.Cm[1]);
+      const LAI=randRange(ranges.LAI[0],ranges.LAI[1]);
+      const LIDFa=randRange(ranges.LIDFa[0],ranges.LIDFa[1]);
+      const Psoil=randRange(ranges.Psoil[0],ranges.Psoil[1]);
+      const Rsoil=randRange(ranges.Rsoil[0],ranges.Rsoil[1]);
+      const p={N,Cab,Car,Cbrown,Cw,Cm,LAI,LIDFa,hspot:geom.hspot,tts:geom.tts,tto:geom.tto,psi:geom.psi,Psoil,Rsoil};
+      const refl=runProsail(p,LIB);
+      const base=s*10;
+      params[base]=N;params[base+1]=Cab;params[base+2]=Car;params[base+3]=Cbrown;
+      params[base+4]=Cw;params[base+5]=Cm;params[base+6]=LAI;params[base+7]=LIDFa;
+      params[base+8]=Psoil;params[base+9]=Rsoil;
+      spectra.set(refl,s*N_WL);
+    }
+    onProgress(s,nSamples);
+    await new Promise(r=>setTimeout(r,0));
+  }
+  return {params,spectra,n:nSamples};
+}
+
+/* ===================== RMSE matching / inversion ===================== */
+const MIN_MATCHES=25;
+
+function matchSpectrum(lut,onGrid,mask,thresholdMult){
+  const validIdx=[];
+  for(let i=0;i<N_WL;i++) if(mask[i]) validIdx.push(i);
+  const nValid=validIdx.length;
+  const n=lut.n;
+  const rmse=new Float32Array(n);
+  for(let s=0;s<n;s++){
+    let sum=0; const base=s*N_WL;
+    for(let k=0;k<nValid;k++){const i=validIdx[k];const d=lut.spectra[base+i]-onGrid[i];sum+=d*d;}
+    rmse[s]=Math.sqrt(sum/nValid);
+  }
+  const order=Array.from({length:n},(_,i)=>i);
+  order.sort((a,b)=>rmse[a]-rmse[b]);
+  const minRMSE=rmse[order[0]], minIdx=order[0];
+  const threshold=minRMSE*thresholdMult;
+  let cutoff=0;
+  while(cutoff<n && rmse[order[cutoff]]<=threshold) cutoff++;
+  let usedFallback=false;
+  if(cutoff<MIN_MATCHES){cutoff=Math.min(MIN_MATCHES,n);usedFallback=true;}
+  const matchIdx=order.slice(0,cutoff);
+
+  const means={},stds={};
+  PARAM_DEFS.forEach((def,di)=>{
+    let sum=0; matchIdx.forEach(s=>sum+=lut.params[s*10+di]);
+    const mean=sum/matchIdx.length;
+    let sq=0; matchIdx.forEach(s=>sq+=(lut.params[s*10+di]-mean)**2);
+    means[def.key]=mean; stds[def.key]=Math.sqrt(sq/matchIdx.length);
+  });
+
+  const bestSpectrum=new Float64Array(N_WL);
+  bestSpectrum.set(lut.spectra.subarray(minIdx*N_WL,minIdx*N_WL+N_WL));
+  const meanSpectrum=new Float64Array(N_WL);
+  matchIdx.forEach(s=>{const base=s*N_WL;for(let i=0;i<N_WL;i++) meanSpectrum[i]+=lut.spectra[base+i];});
+  for(let i=0;i<N_WL;i++) meanSpectrum[i]/=matchIdx.length;
+
+  return {minRMSE,minIdx,threshold,nMatches:matchIdx.length,usedFallback,means,stds,bestSpectrum,meanSpectrum,validIdx};
+}
+
+/* ===================== Chart renderer ===================== */
+function renderSpectrumChart(container,series,opts){
+  opts=opts||{};
+  const W=opts.width||560,H=opts.height||260;
+  const margin={left:46,right:14,top:12,bottom:30};
+  const plotW=W-margin.left-margin.right,plotH=H-margin.top-margin.bottom;
+  let xMin=Infinity,xMax=-Infinity,yMin=Infinity,yMax=-Infinity;
+  series.forEach(s=>s.data.forEach(([x,y])=>{if(x<xMin)xMin=x;if(x>xMax)xMax=x;if(y<yMin)yMin=y;if(y>yMax)yMax=y;}));
+  if(!isFinite(xMin)){xMin=400;xMax=2500;yMin=0;yMax=0.6;}
+  yMin=Math.max(0,yMin-0.02); yMax=yMax+0.04;
+  const sx=x=>margin.left+(x-xMin)/(xMax-xMin)*plotW;
+  const sy=y=>margin.top+plotH-(y-yMin)/(yMax-yMin)*plotH;
+
+  let svg=`<svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}" class="spectrum-chart">`;
+  const yTicks=5;
+  for(let t=0;t<=yTicks;t++){
+    const yv=yMin+(yMax-yMin)*t/yTicks,yy=sy(yv);
+    svg+=`<line x1="${margin.left}" y1="${yy}" x2="${W-margin.right}" y2="${yy}" class="grid-line"/>`;
+    svg+=`<text x="${margin.left-5}" y="${yy+3}" class="axis-label" text-anchor="end">${yv.toFixed(2)}</text>`;
+  }
+  [400,700,1000,1300,1600,1900,2200,2500].filter(v=>v>=xMin-1&&v<=xMax+1).forEach(v=>{
+    const xx=sx(v);
+    svg+=`<line x1="${xx}" y1="${margin.top}" x2="${xx}" y2="${margin.top+plotH}" class="grid-line"/>`;
+    svg+=`<text x="${xx}" y="${H-margin.bottom+14}" class="axis-label" text-anchor="middle">${v}</text>`;
+  });
+  svg+=`<text x="${margin.left+plotW/2}" y="${H-3}" class="axis-title" text-anchor="middle">Wavelength (nm)</text>`;
+  svg+=`<text x="12" y="${margin.top+plotH/2}" class="axis-title" text-anchor="middle" transform="rotate(-90 12 ${margin.top+plotH/2})">Reflectance</text>`;
+  series.forEach(s=>{
+    const pts=s.data.map(([x,y])=>`${sx(x).toFixed(1)},${sy(y).toFixed(1)}`).join(' ');
+    svg+=`<polyline points="${pts}" fill="none" stroke="${s.color}" stroke-width="${s.width||2}" ${s.dash?`stroke-dasharray="${s.dash}"`:''} opacity="${s.opacity||1}"/>`;
+  });
+  svg+=`</svg>`;
+  let legend=`<div class="chart-legend">`;
+  series.forEach(s=>{legend+=`<span class="legend-item"><i style="background:${s.color}"></i>${s.name}</span>`;});
+  legend+=`</div>`;
+  container.innerHTML=svg+legend;
+}
+
+/* ===================== Gauge renderer ===================== */
+function renderGauge(def,mean,std,trueVal){
+  const pct=v=>Math.max(0,Math.min(100,(v-def.min)/(def.max-def.min)*100));
+  const meanPct=pct(mean),loPct=pct(mean-std),hiPct=pct(mean+std);
+  const truePct=trueVal!=null?pct(trueVal):null;
+  return `<div class="gauge" title="${def.info}">
+    <div class="gauge-head">
+      <span class="gauge-label">${def.label} <span class="gauge-short">(${def.short})</span></span>
+      <span class="gauge-value">${mean.toFixed(def.precision)}<span class="gauge-unit">${def.unit?' '+def.unit:''}</span></span>
+    </div>
+    <div class="gauge-track" style="--c:${def.color}">
+      <div class="gauge-spread" style="left:${loPct}%;width:${Math.max(.5,hiPct-loPct)}%"></div>
+      <div class="gauge-marker" style="left:${meanPct}%"></div>
+      ${truePct!=null?`<div class="gauge-true" style="left:${truePct}%" title="True: ${trueVal}"></div>`:''}
+    </div>
+    <div class="gauge-range"><span>${def.min}</span><span>${def.max}${def.unit?' '+def.unit:''}</span></div>
+  </div>`;
+}
+
+/* ===================== VI computation and display ===================== */
+function computeAndShowVIs(){
+  if(!state.gridSpectra.length) return;
+  const idx = state.activeIdx < state.gridSpectra.length ? state.activeIdx : 0;
+  const gs = state.gridSpectra[idx];
+  const viResults = computeVIs(gs.onGrid, gs.mask);
+  renderVICards(els.viGrid, viResults);
+  els.viWrap.style.display = 'block';
+
+  const ppApplied = gs.ppApplied;
+  els.viSourceTag.textContent = ppApplied
+    ? '🔬 Pre-processed spectrum'
+    : '📊 Raw observed spectrum';
+
+  // Store for CSV export
+  state.lastVIs = viResults;
+  state.lastVISample = gs.name;
+}
+
+function downloadVICSV(){
+  if(!state.lastVIs) return;
+  const csv = viToCSV(state.lastVIs, state.lastVISample);
+  const blob = new Blob([csv], {type:'text/csv'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `vegetation_indices_${state.lastVISample.replace(/\W+/g,'_')}.csv`;
+  a.click();
+}
+
+/* ===================== Core workflow ===================== */
+function setSpectra(samples){
+  samples = normalizeUnits(samples.map(sortByWavelength));
+  state.spectra = samples;
+  state.ppApplied = false;
+  els.ppStatus.classList.remove('active');
+  // Build initial grid (no preprocessing)
+  state.gridSpectra = samples.map(s=>{
+    const {onGrid,mask} = interpToGrid(s.wlObs, s.reflObs);
+    return {name:s.name, onGrid, mask, raw:onGrid, ppApplied:false};
+  });
+  renderPreview();
+  computeAndShowVIs();
+  els.runBtn.disabled = false;
+  els.noDataMsg.style.display = 'none';
+  els.ppCard.style.display = 'block';
+  els.exportCard.style.display = 'block';
+  els.batchSection.style.display = samples.length>1 ? 'block' : 'none';
+  if(!(samples.length===1 && /^Example/.test(samples[0].name))) els.demoNote.style.display='none';
+}
+
+function renderPreview(){
+  els.previewWrap.style.display = 'block';
+  const series = [];
+  state.spectra.forEach((s,i)=>{
+    const raw = {name:s.name, color:PALETTE[i%PALETTE.length], opacity:.35, width:1.2,
+      data:s.wlObs.map((w,k)=>[w,s.reflObs[k]])};
+    series.push(raw);
+  });
+  // Show preprocessed on top if applied
+  if(state.ppApplied){
+    state.gridSpectra.forEach((gs,i)=>{
+      const pts=Array.from(WL).map((w,k)=>gs.mask[k]?[w,gs.onGrid[k]]:null).filter(Boolean);
+      series.push({name:gs.name+' (processed)', color:PALETTE[i%PALETTE.length], width:2,
+        data:pts});
+    });
+  }
+  renderSpectrumChart(els.previewChart, series, {height:200});
+  els.sampleSelect.innerHTML = state.spectra.map((s,i)=>`<option value="${i}">${s.name}</option>`).join('');
+}
+
+const PALETTE=['#2f6b3a','#3e7ca6','#c98a2b','#8a5a2b','#6b6b3a','#a6783e','#7a4f8a','#3f7d2c'];
+
+function setProgress(frac,text){
+  els.progressWrap.style.display='block';
+  els.progressBar.style.width=`${Math.round(frac*100)}%`;
+  els.progressText.textContent=text;
+}
+
+async function runRetrieval(){
+  els.runBtn.disabled=true;
+  els.warningsBox.innerHTML='';
+  const warnings=[];
+  const ranges=readRanges();
+  const geom=readGeom();
+  const nSamples=parseInt(els.lutSize.value,10);
+  const thresholdMult=Math.max(1.0,parseFloat(els.thresholdMult.value)||1.2);
+  const excludeAtm=els.excludeAtm.checked;
+  const minWL=parseFloat(els.minWL.value)||400;
+  const maxWL=parseFloat(els.maxWL.value)||2500;
+
+  setProgress(0,'Building lookup table…');
+  const lut=await generateLUT(nSamples,ranges,geom,(done,total)=>{
+    setProgress(done/total,`Building lookup table… ${done.toLocaleString()} / ${total.toLocaleString()}`);
+  });
+  state.lut=lut;
+  setProgress(1,'Matching spectra…');
+  await new Promise(r=>setTimeout(r,0));
+
+  state.results=state.gridSpectra.map((gs,i)=>{
+    let mask=applyAtmosphericExclusion(gs.mask,excludeAtm);
+    mask=applyWavelengthWindow(mask,minWL,maxWL);
+    const nValid=Array.from(mask).reduce((a,b)=>a+b,0);
+    if(nValid<8) warnings.push(`"${gs.name}": only ${nValid} usable wavelength points — results may be unreliable.`);
+    const res=matchSpectrum(lut,gs.onGrid,mask,thresholdMult);
+    if(res.usedFallback) warnings.push(`"${gs.name}": fewer than ${MIN_MATCHES} samples within RMSE threshold → used ${res.nMatches} k-NN instead. Increase LUT size for tighter estimates.`);
+    const indices=computeQuickIndices(gs.onGrid,gs.mask);
+    return {name:gs.name,gs,mask,indices,...res};
+  });
+
+  els.progressWrap.style.display='none';
+  els.warningsBox.innerHTML=warnings.map(w=>`<div class="warning">${w}</div>`).join('');
+  state.activeIdx=0;
+  renderResults();
+  if(state.results.length>1) renderBatchTable();
+  els.runBtn.disabled=false;
+  els.resultsWrap.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function renderResults(){
+  const r=state.results[state.activeIdx];
+  if(!r) return;
+  els.resultsWrap.style.display='block';
+  els.sampleSelect.value=state.activeIdx;
+  const isDemo=state.spectra.length===1 && /^Example/.test(state.spectra[0].name);
+  els.gaugesGrid.innerHTML=PARAM_DEFS.map(def=>{
+    const trueVal=isDemo?DEMO_TRUE_PARAMS[def.key]:null;
+    return renderGauge(def,r.means[def.key],r.stds[def.key],trueVal);
+  }).join('');
+  const validWL=r.validIdx.map(i=>WL[i]);
+  const obsSeries=r.validIdx.map(i=>[WL[i],r.gs.onGrid[i]]);
+  const bestSeries=r.validIdx.map(i=>[WL[i],r.bestSpectrum[i]]);
+  const meanSeries=r.validIdx.map(i=>[WL[i],r.meanSpectrum[i]]);
+  renderSpectrumChart(els.fitChart,[
+    {name:'Observed',color:'#1e2a20',data:obsSeries,width:2.2},
+    {name:'Best LUT match',color:'#c25b3f',data:bestSeries,width:1.6,dash:'5,3'},
+    {name:'Mean of matches',color:'#3e7ca6',data:meanSeries,width:1.6,dash:'1,3'},
+  ],{height:260});
+  els.rmseStat.textContent=r.minRMSE.toFixed(4);
+  els.matchStat.textContent=`${r.nMatches.toLocaleString()} / ${state.lut.n.toLocaleString()}${r.usedFallback?' (k-NN)':''}`;
+  const idxParts=[];
+  if(r.indices.ndvi!==null) idxParts.push(`NDVI ≈ ${r.indices.ndvi.toFixed(3)}`);
+  if(r.indices.cigreen!==null) idxParts.push(`CIgreen ≈ ${r.indices.cigreen.toFixed(3)}`);
+  els.indicesStat.textContent=idxParts.length?idxParts.join('   ·   '):'Needs red/NIR coverage';
+}
+
+function renderBatchTable(){
+  let html=`<table class="batch-table"><thead><tr><th>Sample</th>`+
+    PARAM_DEFS.map(d=>`<th>${d.short}</th>`).join('')+`<th>RMSE</th><th>Matches</th></tr></thead><tbody>`;
+  state.results.forEach((r,i)=>{
+    html+=`<tr class="${i===state.activeIdx?'active-row':''}" data-idx="${i}"><td>${r.name}</td>`+
+      PARAM_DEFS.map(d=>`<td>${r.means[d.key].toFixed(d.precision)}</td>`).join('')+
+      `<td>${r.minRMSE.toFixed(4)}</td><td>${r.nMatches}</td></tr>`;
+  });
+  html+=`</tbody></table>`;
+  els.batchTable.innerHTML=html;
+  els.batchTable.querySelectorAll('tr[data-idx]').forEach(tr=>{
+    tr.addEventListener('click',()=>{
+      state.activeIdx=parseInt(tr.dataset.idx,10);
+      renderResults();
+      computeAndShowVIs();
+      els.batchTable.querySelectorAll('tr').forEach(t=>t.classList.remove('active-row'));
+      tr.classList.add('active-row');
+    });
+  });
+}
+
+function downloadBatchCSV(){
+  const header=['sample',...PARAM_DEFS.map(d=>d.short),'RMSE','n_matches'].join(',');
+  const rows=state.results.map(r=>[`"${r.name}"`,...PARAM_DEFS.map(d=>r.means[d.key].toFixed(d.precision)),r.minRMSE.toFixed(5),r.nMatches].join(','));
+  const csv=[header,...rows].join('\n');
+  const blob=new Blob([csv],{type:'text/csv'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='prosail_retrieved_parameters.csv';
+  a.click();
+}
+
+/* ===================== Full Excel export ===================== */
+function exportFullExcel(){
+  if(typeof XLSX==='undefined'){
+    alert('Excel export library failed to load — check your internet connection and reload the page.');
+    return;
+  }
+  if(!state.gridSpectra.length){ alert('Load a spectrum first.'); return; }
+
+  const wb=XLSX.utils.book_new();
+  const wlCol=Array.from(WL);
+
+  // Raw spectra
+  const rawHeader=['Wavelength_nm',...state.gridSpectra.map(g=>g.name)];
+  const rawRows=wlCol.map((w,i)=>[w,...state.gridSpectra.map(g=>g.mask[i]?Number(g.raw[i].toFixed(6)):'')]);
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([rawHeader,...rawRows]),'Spectra_Raw');
+
+  // Processed spectra
+  const procHeader=['Wavelength_nm',...state.gridSpectra.map(g=>g.name+(g.ppApplied?' (processed)':' (no PP applied)'))];
+  const procRows=wlCol.map((w,i)=>[w,...state.gridSpectra.map(g=>g.mask[i]?Number(g.onGrid[i].toFixed(6)):'')]);
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([procHeader,...procRows]),'Spectra_Processed');
+
+  // Vegetation indices (wide: rows=sample, cols=index)
+  const viHeader=['Sample',...VI_DEFS.map(d=>d.name)];
+  const viRows=state.gridSpectra.map(g=>{
+    const vis=computeVIs(g.onGrid,g.mask);
+    return [g.name,...vis.map(v=>v.available?Number(v.value.toFixed(v.prec||4)):'')];
+  });
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([viHeader,...viRows]),'Vegetation_Indices');
+
+  // VI reference / metadata
+  const refHeader=['Index','Full name','Group','Bands (nm)','Reference','Notes'];
+  const refRows=VI_DEFS.map(d=>[d.name,d.full,d.group,d.bands.join(', '),d.ref,d.note||'']);
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([refHeader,...refRows]),'VI_Reference');
+
+  // PROSAIL traits (only if retrieval has been run)
+  if(state.results && state.results.length){
+    const traitHeader=['Sample',...PARAM_DEFS.flatMap(d=>[`${d.short}_mean`,`${d.short}_sd`]),'min_RMSE','n_matches','used_kNN_fallback'];
+    const traitRows=state.results.map(r=>[
+      r.name,
+      ...PARAM_DEFS.flatMap(d=>[Number(r.means[d.key].toFixed(d.precision+2)),Number(r.stds[d.key].toFixed(d.precision+2))]),
+      Number(r.minRMSE.toFixed(5)),r.nMatches,r.usedFallback?'yes':'no',
+    ]);
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([traitHeader,...traitRows]),'PROSAIL_Traits');
+  }
+
+  // Run info / settings
+  const info=[
+    ['HyperProc export',new Date().toISOString()],
+    ['Samples',state.gridSpectra.length],
+    ['Pre-processing — spike removal',state.ppSettings.spikeRemoval?`yes (×${state.ppSettings.madMult} local MAD)`:'no'],
+    ['Pre-processing — SG smoothing',state.ppSettings.sgSmoothing?`yes (window ${2*state.ppSettings.sgHalfWindow+1} pts, order ${state.ppSettings.sgPolyOrder})`:'no'],
+  ];
+  if(state.results && state.results.length){
+    const g=readGeom();
+    info.push(['Geometry — tts / tto / psi (deg)',`${g.tts} / ${g.tto} / ${g.psi}`]);
+    info.push(['LUT size',state.lut?state.lut.n:'']);
+  } else {
+    info.push(['PROSAIL retrieval','not run']);
+  }
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(info),'Run_Info');
+
+  XLSX.writeFile(wb,`HyperProc_export_${new Date().toISOString().slice(0,10)}.xlsx`);
+}
+
+/* ===================== Settings helpers ===================== */
+function buildRangeTable(){
+  let html=`<table class="range-table"><thead><tr><th>Parameter</th><th>Min</th><th>Max</th></tr></thead><tbody>`;
+  PARAM_DEFS.forEach(def=>{
+    html+=`<tr><td>${def.label} <span class="muted">(${def.short})</span></td>
+      <td><input type="number" step="any" id="rmin-${def.key}" value="${def.min}"></td>
+      <td><input type="number" step="any" id="rmax-${def.key}" value="${def.max}"></td></tr>`;
+  });
+  html+=`</tbody></table>`;
+  els.rangeTable.innerHTML=html;
+}
+
+function readRanges(){
+  const ranges={};
+  PARAM_DEFS.forEach(def=>{
+    const lo=parseFloat(document.getElementById(`rmin-${def.key}`).value);
+    const hi=parseFloat(document.getElementById(`rmax-${def.key}`).value);
+    ranges[def.key]=[lo,hi];
+  });
+  return ranges;
+}
+
+function resetRanges(){ PARAM_DEFS.forEach(def=>{ document.getElementById(`rmin-${def.key}`).value=def.min; document.getElementById(`rmax-${def.key}`).value=def.max; }); }
+
+function readGeom(){
+  return {tts:parseFloat(els.tts.value)||25,tto:parseFloat(els.tto.value)||0,psi:parseFloat(els.psi.value)||0,hspot:parseFloat(els.hspot.value)||0.01};
+}
+
+/* ===================== Element refs ===================== */
+const els = {};
+['pasteArea','fileInput','exampleBtn','parseBtn','previewWrap','previewChart','sampleSelect',
+ 'tts','tto','psi','hspot','lutSize','thresholdMult','excludeAtm','minWL','maxWL',
+ 'rangeTable','resetRangesBtn','runBtn','progressWrap','progressBar','progressText',
+ 'resultsWrap','gaugesGrid','fitChart','rmseStat','matchStat','indicesStat','warningsBox',
+ 'batchSection','batchTable','downloadCsvBtn','advancedToggle','advancedPanel','noDataMsg','demoNote',
+ 'ppCard','ppSpike','ppMad','ppSG','ppWindow','ppOrder','ppApplyBtn','ppStatus','ppResetBtn',
+ 'viWrap','viGrid','viSourceTag','viDownloadBtn','exportCard','exportExcelBtn',
+ 'solarToggle','solarPanel','solarCityInput','solarGeocodeBtn','solarGeocodeStatus',
+ 'solarLat','solarLon','solarUTC','solarEstUTCBtn','solarDate','solarTime','solarHasSensorAz','solarSensorAzWrap',
+ 'solarSensorAz','solarCalcBtn','solarResults','solarElevStat','solarZenithStat','solarAzStat',
+ 'solarPsiRow','solarPsiStat','solarWarning','solarUseTtsBtn','solarUsePsiBtn',
+].forEach(id=>{els[id]=document.getElementById(id);});
+
+/* ===================== Solar position calculator ===================== */
+function initSolarDefaults(){
+  // Default the date field to today (LOCAL browser date — not toISOString, which is UTC-based
+  // and can land on the wrong calendar day depending on time of day and local UTC offset)
+  const today=new Date();
+  const yyyy=today.getFullYear();
+  const mm2=String(today.getMonth()+1).padStart(2,'0');
+  const dd2=String(today.getDate()).padStart(2,'0');
+  els.solarDate.value=`${yyyy}-${mm2}-${dd2}`;
+}
+
+async function runGeocode(){
+  const q=els.solarCityInput.value.trim();
+  if(!q){ els.solarGeocodeStatus.textContent='Type a city or place name first.'; return; }
+  els.solarGeocodeStatus.textContent='Searching…';
+  els.solarGeocodeBtn.disabled=true;
+  try{
+    const res=await geocodeCity(q);
+    els.solarLat.value=res.lat.toFixed(4);
+    els.solarLon.value=res.lon.toFixed(4);
+    const estUTC=estimateUTCOffset(res.lon);
+    els.solarUTC.value=estUTC;
+    els.solarGeocodeStatus.textContent=`✓ Found: ${res.name}  ·  UTC offset estimated as ${estUTC>=0?'+':''}${estUTC} from longitude — verify this matches the local time zone and daylight saving at your flight date.`;
+  }catch(err){
+    const msg=(err && err.message && !/failed to fetch/i.test(err.message)) ? err.message
+      : 'Could not reach the location lookup service — check your internet connection, or enter coordinates manually below.';
+    els.solarGeocodeStatus.textContent=`⚠ ${msg}`;
+  }finally{
+    els.solarGeocodeBtn.disabled=false;
+  }
+}
+
+function runSolarCalc(){
+  const lat=parseFloat(els.solarLat.value), lon=parseFloat(els.solarLon.value);
+  const utcOff=parseFloat(els.solarUTC.value);
+  const dateVal=els.solarDate.value, timeVal=els.solarTime.value;
+  if(isNaN(lat)||isNaN(lon)){ alert('Enter latitude and longitude (search a city, pick a preset, or type coordinates).'); return; }
+  if(!dateVal||!timeVal){ alert('Set a date and local time.'); return; }
+  const [y,m,d]=dateVal.split('-').map(Number);
+  const [hh,mm]=timeVal.split(':').map(Number);
+
+  const pos=calcSolarPosition(y,m,d,hh,mm,utcOff,lat,lon);
+  els.solarElevStat.textContent=`${pos.elevation.toFixed(1)}°`;
+  els.solarZenithStat.textContent=`${pos.zenith.toFixed(1)}°`;
+  els.solarAzStat.textContent=`${pos.azimuth.toFixed(1)}°`;
+
+  els.solarWarning.innerHTML = pos.elevation<0
+    ? `<div class="warning">Sun is below the horizon at this date/time/location (elevation ${pos.elevation.toFixed(1)}°). Check the date, local time, and UTC offset.</div>`
+    : pos.elevation<5
+    ? `<div class="warning">Sun is very low (elevation ${pos.elevation.toFixed(1)}°) — near sunrise/sunset. PROSAIL/4SAIL assumes tts &lt; 89° and results may be less reliable at extreme angles.</div>`
+    : '';
+
+  state.lastSolar={tts:pos.zenith, azimuth:pos.azimuth};
+
+  if(els.solarHasSensorAz.checked){
+    const sensorAz=parseFloat(els.solarSensorAz.value);
+    if(!isNaN(sensorAz)){
+      const psi=relativeAzimuth(pos.azimuth,sensorAz);
+      els.solarPsiStat.textContent=`${psi.toFixed(1)}°`;
+      els.solarPsiRow.style.display='block';
+      els.solarUsePsiBtn.style.display='inline-flex';
+      state.lastSolar.psi=psi;
+    }else{
+      els.solarPsiRow.style.display='none';
+      els.solarUsePsiBtn.style.display='none';
+    }
+  }else{
+    els.solarPsiRow.style.display='none';
+    els.solarUsePsiBtn.style.display='none';
+  }
+
+  els.solarResults.style.display='block';
+}
+
+
+els.parseBtn.addEventListener('click',()=>{
+  const samples=parsePastedText(els.pasteArea.value);
+  if(!samples){alert('Could not parse. Expecting: wavelength  reflectance (space/tab/comma separated).');return;}
+  setSpectra(samples);
+});
+
+els.fileInput.addEventListener('change',(e)=>{
+  const file=e.target.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=()=>{
+    const samples=parseDelimitedFile(reader.result);
+    if(!samples){alert('Could not parse file. Expecting wavelength in first column.');return;}
+    setSpectra(samples);
+  };
+  reader.readAsText(file);
+});
+
+els.exampleBtn.addEventListener('click',()=>{
+  const wlArr=Array.from(WL);
+  setSpectra([{name:'Example canopy spectrum (synthetic, noise-added)', wlObs:wlArr, reflObs:Array.from(DEMO_REFL)}]);
+  els.tts.value=DEMO_GEOM.tts; els.tto.value=DEMO_GEOM.tto; els.psi.value=DEMO_GEOM.psi;
+  els.demoNote.style.display='block';
+});
+
+els.sampleSelect.addEventListener('change',()=>{
+  state.activeIdx=parseInt(els.sampleSelect.value,10);
+  computeAndShowVIs();
+  if(state.results.length) renderResults();
+});
+
+els.advancedToggle.addEventListener('click',()=>{
+  const open=els.advancedPanel.classList.toggle('open');
+  els.advancedToggle.setAttribute('aria-expanded',open);
+});
+
+els.solarToggle.addEventListener('click',()=>{
+  const open=els.solarPanel.classList.toggle('open');
+  els.solarToggle.setAttribute('aria-expanded',open);
+});
+els.solarGeocodeBtn.addEventListener('click',runGeocode);
+els.solarCityInput.addEventListener('keydown',(e)=>{ if(e.key==='Enter'){ e.preventDefault(); runGeocode(); } });
+els.solarEstUTCBtn.addEventListener('click',()=>{
+  const lon=parseFloat(els.solarLon.value);
+  if(isNaN(lon)){ alert('Enter a longitude first.'); return; }
+  els.solarUTC.value=estimateUTCOffset(lon);
+});
+els.solarHasSensorAz.addEventListener('change',()=>{
+  els.solarSensorAzWrap.style.display=els.solarHasSensorAz.checked?'grid':'none';
+});
+els.solarCalcBtn.addEventListener('click',runSolarCalc);
+els.solarUseTtsBtn.addEventListener('click',()=>{
+  if(state.lastSolar) els.tts.value=state.lastSolar.tts.toFixed(1);
+});
+els.solarUsePsiBtn.addEventListener('click',()=>{
+  if(state.lastSolar && state.lastSolar.psi!=null) els.psi.value=state.lastSolar.psi.toFixed(1);
+});
+
+// Pre-processing controls: update disabled state
+function syncPPControls(){
+  els.ppMad.disabled=!els.ppSpike.checked;
+  els.ppWindow.disabled=!els.ppSG.checked;
+  els.ppOrder.disabled=!els.ppSG.checked;
+}
+els.ppSpike.addEventListener('change',syncPPControls);
+els.ppSG.addEventListener('change',syncPPControls);
+syncPPControls();
+
+els.ppApplyBtn.addEventListener('click',applyPreprocessing);
+els.ppResetBtn.addEventListener('click',()=>{
+  els.ppSpike.checked=false; els.ppSG.checked=false; syncPPControls();
+  if(state.spectra.length){
+    state.gridSpectra=state.spectra.map(s=>{
+      const {onGrid,mask}=interpToGrid(s.wlObs,s.reflObs);
+      return {name:s.name,onGrid,mask,raw:onGrid,ppApplied:false};
+    });
+    state.ppApplied=false;
+    els.ppStatus.classList.remove('active');
+    renderPreview(); computeAndShowVIs();
+  }
+});
+
+els.resetRangesBtn.addEventListener('click',resetRanges);
+els.runBtn.addEventListener('click',runRetrieval);
+els.downloadCsvBtn.addEventListener('click',downloadBatchCSV);
+els.viDownloadBtn.addEventListener('click',downloadVICSV);
+els.exportExcelBtn.addEventListener('click',exportFullExcel);
+
+/* ===================== Init ===================== */
+buildRangeTable();
+initSolarDefaults();
+</script>
+<script>
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-'+btn.dataset.tab).classList.add('active');
+  });
+});
+document.querySelectorAll('.main-tab-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.main-tab-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.main-tab-panel').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('maintab-'+btn.dataset.maintab).classList.add('active');
+  });
+});
+</script>
+</body>
+</html>
